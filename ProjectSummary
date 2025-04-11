@@ -1,0 +1,385 @@
+# WinDD Project Summary
+
+## Project Overview
+WinDD is a React Native mobile application built with Expo, designed to manage tasks and projects. The application uses TypeScript for type safety and follows a modern, component-based architecture. It provides a comprehensive task management solution with features for individual and team-based task tracking.
+
+## Architecture
+
+### Frontend Structure
+1. **Components**
+   - **Task Components**
+     - `TaskFormModal`: Enhanced modal for task creation/editing
+       - Implements platform-specific date picker behavior
+       - Features Cancel/Done buttons for iOS date selection
+       - Uses temporary state for date changes
+       - Handles keyboard interactions properly
+     - `SubTaskFormModal`: Advanced modal for subtask management
+       - Mirrors TaskFormModal's date picker implementation
+       - Includes assignee management with search
+       - Features progress slider for completion tracking
+       - Implements proper keyboard and scroll behavior
+     - `TaskCard`: Reusable component for displaying task information
+       - Displays task title, description, status, and due date
+       - Shows progress indicators and participant avatars
+       - Handles task status updates and navigation
+     - `FeaturedTasksSection`: Displays featured tasks in a carousel format
+       - Implements horizontal scrolling for task previews
+       - Shows task priority and status indicators
+       - Handles task selection and navigation
+     - `TaskSummarySection`: Shows task statistics and summaries
+       - Displays task counts by status
+       - Shows progress charts and metrics
+       - Implements filtering and sorting options
+     - `TaskList`: Displays a list of tasks with filtering capabilities
+       - Implements infinite scrolling
+       - Supports multiple view modes (list, grid)
+       - Handles task selection and actions
+     - `TaskDetail`: Detailed view of a single task
+       - Shows complete task information
+       - Manages subtasks and comments
+       - Handles task updates and actions
+
+   - **Common Components**
+     - `Button`: Custom button component with variants
+     - `Input`: Form input component with validation
+     - `Modal`: Reusable modal dialog
+     - `LoadingIndicator`: Custom loading spinner
+     - `ErrorBoundary`: Error handling component
+     - `DatePicker`: Platform-specific date selection
+       - iOS: Inline picker with Cancel/Done buttons
+       - Android: Native date picker dialog
+
+2. **Screens**
+   - `HomeScreen`: Main dashboard showing task overview and featured tasks
+     - Displays task statistics and summaries
+     - Shows featured and recent tasks
+     - Implements quick actions and shortcuts
+   - `TaskListScreen`: List of all tasks with filtering options
+     - Supports advanced filtering and sorting
+     - Implements search functionality
+     - Shows task status indicators
+   - `TaskDetailScreen`: Detailed view of a single task
+     - Shows task information and history
+     - Manages subtasks and comments
+     - Handles task updates and actions
+   - `TaskFormScreen`: Screen for creating/editing tasks
+     - Implements form validation
+     - Supports file attachments
+     - Manages participant assignments
+
+3. **Navigation**
+   - Uses React Navigation with a bottom tab navigator
+     - Main tabs: Home, Tasks, Profile, Settings
+     - Nested navigation for task details and forms
+     - Implements deep linking support
+   - Navigation Structure:
+     ```
+     AppNavigator
+     ├── BottomTabNavigator
+     │   ├── HomeStack
+     │   │   ├── HomeScreen
+     │   │   └── TaskDetailScreen
+     │   ├── TasksStack
+     │   │   ├── TaskListScreen
+     │   │   ├── TaskDetailScreen
+     │   │   └── TaskFormScreen
+     │   └── ProfileStack
+     └── AuthStack
+     ```
+
+4. **State Management**
+   - Uses React Context for global state management
+     - `TaskContext`: Manages task state and operations
+     - `UserContext`: Handles user authentication and preferences
+     - `ThemeContext`: Manages app theming and appearance
+   - Custom hooks for data fetching and state management
+     - `useTasks`: Manages task data and operations
+     - `useAuth`: Handles authentication state
+     - `useTheme`: Manages theme preferences
+   - AsyncStorage for local data persistence
+     - Caches task data for offline access
+     - Stores user preferences
+     - Manages authentication tokens
+
+### Backend Services
+1. **Task Management Service**
+   - Handles CRUD operations for tasks
+     - Create, read, update, and delete tasks
+     - Manage task status and progress
+     - Handle task assignments and permissions
+   - Manages task status updates
+     - Track task progress
+     - Handle status transitions
+     - Manage due dates and reminders
+   - Handles task filtering and sorting
+     - Implement advanced search
+     - Support multiple filter criteria
+     - Manage sorting preferences
+
+2. **User Service**
+   - Manages user authentication
+     - Handle login/logout
+     - Manage session tokens
+     - Implement password reset
+   - Handles user preferences and settings
+     - Manage theme preferences
+     - Store user settings
+     - Handle notifications preferences
+
+3. **Notification Service**
+   - Manages task reminders and notifications
+     - Schedule task reminders
+     - Handle due date notifications
+     - Manage status change alerts
+   - Handles push notifications for task updates
+     - Implement real-time updates
+     - Manage notification preferences
+     - Handle notification delivery
+
+## Data Flow
+1. **API Communication**
+   - Uses Axios for HTTP requests
+     - Configured with base URL and headers
+     - Implements request/response interceptors
+     - Handles error responses
+   - RESTful API endpoints for data operations
+     - Tasks: `/api/tasks`
+     - Users: `/api/users`
+     - Comments: `/api/comments`
+   - Type-safe API calls using TypeScript interfaces
+     - Request/response type definitions
+     - Error handling types
+     - Validation schemas
+
+2. **Data Models**
+   - `Task`: Core task data structure
+     ```typescript
+     interface Task {
+       id: string;
+       title: string;
+       description: string;
+       status: TaskStatus;
+       dueDate: string;
+       createdBy: string;
+       createdAt: string;
+       lastUpdated: string;
+       participants: Participant[];
+       subtasks: SubTask[];
+     }
+     ```
+   - `SubTask`: Nested task structure
+     ```typescript
+     interface SubTask {
+       id: string;
+       title: string;
+       description?: string;
+       assignee: string[];
+       progress: number;
+       dueDate: string;
+       createdBy: string;
+       createdAt: string;
+       lastUpdated: string;
+       comments: Comment[];
+     }
+     ```
+   - `TaskStatus`: Enum for task states
+     ```typescript
+     type TaskStatus = 'in progress' | 'completed' | 'expired' | 'closed';
+     ```
+   - `TaskPriority`: Enum for task priorities
+     ```typescript
+     type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
+     ```
+
+## Key Features
+1. **Task Management**
+   - Enhanced modal interactions
+     - Improved date picker UX
+     - Platform-specific behaviors
+     - Proper keyboard handling
+   - Task status tracking
+     - Status transitions
+     - Progress indicators
+     - Due date management
+   - Priority management
+     - Priority levels
+     - Urgency indicators
+     - Priority-based sorting
+   - Due date tracking
+     - Date picker integration
+     - Reminder system
+     - Overdue indicators
+   - Subtask support
+     - Nested task structure
+     - Progress tracking
+     - Assignment management
+
+2. **User Interface**
+   - Platform-specific optimizations
+     - iOS-specific date picker with Cancel/Done
+     - Android native date picker integration
+   - Modern, responsive design
+     - Material Design components
+     - Custom animations
+     - Gesture support
+   - Dark/light mode support
+     - Theme switching
+     - Color schemes
+     - Accessibility support
+   - Customizable themes
+     - Color customization
+     - Font preferences
+     - Layout options
+   - Gesture-based interactions
+     - Swipe actions
+     - Pull-to-refresh
+     - Pinch-to-zoom
+
+3. **Data Persistence**
+   - Local storage using AsyncStorage
+     - Task caching
+     - User preferences
+     - Offline data
+   - Offline support
+     - Local data access
+     - Sync management
+     - Conflict resolution
+   - Data synchronization
+     - Background sync
+     - Conflict handling
+     - Update notifications
+
+## Technical Stack
+- **Frontend Framework**: React Native with Expo
+  - Expo SDK 52
+  - React 18.3.1
+  - React Native 0.76.7
+- **Language**: TypeScript 5.3.3
+- **State Management**: React Context
+- **Navigation**: React Navigation
+  - Bottom Tabs
+  - Stack Navigation
+  - Deep Linking
+- **HTTP Client**: Axios
+- **UI Components**: 
+  - Expo Vector Icons
+  - React Native Paper
+  - Custom Components
+- **Storage**: AsyncStorage
+- **Development Tools**:
+  - TypeScript
+  - Jest
+  - ESLint
+  - Prettier
+
+## Dependencies
+- **Core Dependencies**
+  - expo: ~52.0.40
+  - react: 18.3.1
+  - react-native: 0.76.7
+  - typescript: ^5.3.3
+
+- **Navigation**
+  - @react-navigation/native: ^7.0.18
+  - @react-navigation/bottom-tabs: ^7.3.2
+  - @react-navigation/native-stack: ^7.3.3
+
+- **UI Components**
+  - @expo/vector-icons: ^14.0.2
+  - react-native-paper: ^5.12.1
+  - react-native-calendars: ^1.1310.0
+
+- **Utilities**
+  - axios: ^1.8.4
+  - @react-native-async-storage/async-storage: ^1.23.1
+
+## Project Structure
+```
+src/
+├── api/          # API service definitions
+│   ├── tasks.ts
+│   ├── users.ts
+│   └── comments.ts
+├── components/   # Reusable UI components
+│   ├── task/     # Task-related components
+│   ├── home/     # Home screen components
+│   ├── common/   # Shared components
+│   └── comment/  # Comment components
+├── constants/    # App constants and configurations
+│   ├── colors.ts
+│   ├── theme.ts
+│   └── config.ts
+├── contexts/     # React Context providers
+│   ├── TaskContext.tsx
+│   ├── UserContext.tsx
+│   └── ThemeContext.tsx
+├── hooks/        # Custom React hooks
+│   ├── useTasks.ts
+│   ├── useAuth.ts
+│   └── useTheme.ts
+├── navigation/   # Navigation configuration
+│   ├── AppNavigator.tsx
+│   ├── BottomTabNavigator.tsx
+│   └── types.ts
+├── screens/      # Screen components
+│   ├── HomeScreen.tsx
+│   ├── TaskListScreen.tsx
+│   └── TaskDetailScreen.tsx
+├── services/     # Business logic services
+│   ├── TaskApi.ts
+│   ├── UserApi.ts
+│   └── NotificationService.ts
+├── theme/        # Styling and theming
+│   ├── colors.ts
+│   ├── typography.ts
+│   └── spacing.ts
+├── types/        # TypeScript type definitions
+│   ├── task.ts
+│   ├── user.ts
+│   └── comment.ts
+└── utils/        # Utility functions
+    ├── validation.ts
+    ├── formatting.ts
+    └── helpers.ts
+```
+
+## Important Notes
+1. **Architecture**
+   - Follows a modular architecture for easy maintenance and scalability
+   - Implements clean code principles and SOLID design patterns
+   - Uses dependency injection for service management
+
+2. **Type Safety**
+   - TypeScript is used throughout for type safety
+   - Implements strict type checking
+   - Uses generics for reusable components
+
+3. **Performance**
+   - Implements code splitting and lazy loading
+   - Uses memoization for expensive computations
+   - Optimizes re-renders with React.memo
+
+4. **Development**
+   - Uses Expo for streamlined development
+   - Implements hot reloading for faster development
+   - Supports both iOS and Android platforms
+
+5. **Testing**
+   - Implements unit tests with Jest
+   - Uses React Testing Library for component tests
+   - Implements continuous integration
+
+6. **Security**
+   - Implements secure storage for sensitive data
+   - Uses HTTPS for all API calls
+   - Implements proper authentication and authorization
+
+7. **Accessibility**
+   - Follows WCAG guidelines
+   - Implements proper ARIA labels
+   - Supports screen readers
+
+8. **Internationalization**
+   - Supports multiple languages
+   - Implements proper date/time formatting
+   - Handles RTL layouts

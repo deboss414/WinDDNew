@@ -58,9 +58,9 @@ export const SubTaskFormModal: React.FC<SubTaskFormModalProps> = ({
   const [assigneeSearchText, setAssigneeSearchText] = useState('');
   const [showAssigneeDropdown, setShowAssigneeDropdown] = useState(false);
   const [dueDate, setDueDate] = useState(new Date());
-  const [progress, setProgress] = useState(0);
+  const [tempDate, setTempDate] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [progress, setProgress] = useState(0);
 
   const filteredParticipants = (participants || []).filter(
     participant =>
@@ -129,11 +129,21 @@ export const SubTaskFormModal: React.FC<SubTaskFormModalProps> = ({
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setSelectedDate(selectedDate);
-      setDueDate(selectedDate);
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+      if (selectedDate) {
+        setDueDate(selectedDate);
+      }
+    } else {
+      if (selectedDate) {
+        setTempDate(selectedDate);
+      }
     }
+  };
+
+  const handleDatePickerDone = () => {
+    setDueDate(tempDate);
+    setShowDatePicker(false);
   };
 
   const handleAddAssignee = (participant: string) => {
@@ -387,7 +397,12 @@ export const SubTaskFormModal: React.FC<SubTaskFormModalProps> = ({
                       borderColor: colors.divider,
                     },
                   ]}
-                  onPress={() => !isFormSubmitting && setShowDatePicker(true)}
+                  onPress={() => {
+                    if (!isFormSubmitting) {
+                      setTempDate(dueDate);
+                      setShowDatePicker(true);
+                    }
+                  }}
                 >
                   <View style={styles.dateInputContent}>
                     <Text
@@ -406,20 +421,42 @@ export const SubTaskFormModal: React.FC<SubTaskFormModalProps> = ({
                     style={[
                       styles.datePickerContainer,
                       {
-                        backgroundColor: isDark ? '#2A2A2A' : '#FFFFFF',
+                        backgroundColor: colors.cardBackground,
                         borderColor: colors.divider,
                       },
                     ]}
                   >
+                    {Platform.OS === 'ios' && (
+                      <View style={styles.datePickerHeader}>
+                        <TouchableOpacity
+                          onPress={() => setShowDatePicker(false)}
+                          style={styles.datePickerButton}
+                          disabled={isFormSubmitting}
+                        >
+                          <Text style={[styles.datePickerButtonText, { color: colors.text }]}>
+                            Cancel
+                          </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                          onPress={handleDatePickerDone}
+                          style={styles.datePickerButton}
+                          disabled={isFormSubmitting}
+                        >
+                          <Text style={[styles.datePickerButtonText, { color: colors.primary }]}>
+                            Done
+                          </Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
                     <DateTimePicker
-                      value={selectedDate}
+                      value={Platform.OS === 'ios' ? tempDate : dueDate}
                       mode="date"
-                      display={Platform.OS === 'ios' ? 'inline' : 'calendar'}
+                      display={Platform.OS === 'ios' ? 'inline' : 'default'}
                       onChange={handleDateChange}
                       minimumDate={new Date()}
-                      textColor={isDark ? '#ECEDEE' : '#11181C'}
+                      textColor={colors.text}
                       style={styles.datePicker}
-                      themeVariant={isDark ? 'dark' : 'light'}
+                      themeVariant={colorScheme}
                     />
                   </View>
                 )}
@@ -613,11 +650,26 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     overflow: 'hidden',
-    padding: Platform.OS === 'ios' ? 10 : 0,
+    padding: Platform.OS === 'ios' ? 0 : 0,
+  },
+  datePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  datePickerButton: {
+    padding: 4,
+  },
+  datePickerButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
   },
   datePicker: {
     width: '100%',
-    height: Platform.OS === 'ios' ? 200 : undefined,
+    height: Platform.OS === 'ios' ? 300 : undefined,
   },
   progressContainer: {
     flexDirection: 'row',

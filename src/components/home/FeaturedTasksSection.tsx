@@ -15,9 +15,10 @@ type TabNavigationProp = BottomTabNavigationProp<MainTabParamList>;
 
 interface FeaturedTasksSectionProps {
   tasks: Task[];
+  onTaskPress: (task: Task) => void;
 }
 
-export const FeaturedTasksSection: React.FC<FeaturedTasksSectionProps> = ({ tasks }) => {
+export const FeaturedTasksSection: React.FC<FeaturedTasksSectionProps> = ({ tasks, onTaskPress }) => {
   const colorScheme = useColorScheme() || 'light';
   const colors = getColors(colorScheme);
   const [activeIndex, setActiveIndex] = useState(0);

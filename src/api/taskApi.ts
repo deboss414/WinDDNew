@@ -20,8 +20,9 @@ const mockTasks: Task[] = [
         id: '1-1',
         title: 'Research Requirements',
         description: 'Research and document project requirements',
-        status: 'completed',
+        assignee: ['user@example.com'],
         progress: 100,
+        dueDate: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         lastUpdated: new Date().toISOString(),
         createdBy: 'user@example.com',
@@ -29,8 +30,11 @@ const mockTasks: Task[] = [
           {
             id: '1-1-1',
             text: 'Requirements research completed',
+            authorId: 'user@example.com',
+            authorName: 'John Doe',
             createdAt: new Date().toISOString(),
-            createdBy: 'user@example.com'
+            isEdited: false,
+            subtaskId: '1-1'
           }
         ]
       },
@@ -38,8 +42,9 @@ const mockTasks: Task[] = [
         id: '1-2',
         title: 'Create Timeline',
         description: 'Develop project timeline with milestones',
-        status: 'in progress',
+        assignee: ['user@example.com'],
         progress: 60,
+        dueDate: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         lastUpdated: new Date().toISOString(),
         createdBy: 'user@example.com',
@@ -51,7 +56,7 @@ const mockTasks: Task[] = [
     id: '2',
     title: 'Design System',
     description: 'Design the system architecture and user interface',
-    status: 'pending',
+    status: 'in progress',
     dueDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days from now
     createdAt: new Date().toISOString(),
     lastUpdated: new Date().toISOString(),
@@ -65,8 +70,9 @@ const mockTasks: Task[] = [
         id: '2-1',
         title: 'UI Design',
         description: 'Create user interface designs',
-        status: 'pending',
+        assignee: ['designer@example.com'],
         progress: 0,
+        dueDate: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         lastUpdated: new Date().toISOString(),
         createdBy: 'user@example.com',
@@ -390,3 +396,11 @@ export const deleteComment = async (taskId: string, subtaskId: string, commentId
     throw error;
   }
 };
+
+export const {
+  updateTask,
+  addSubtask,
+  updateSubtask,
+  deleteSubtask,
+  updateSubtaskProgress,
+} = taskApi;

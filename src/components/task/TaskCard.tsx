@@ -63,14 +63,14 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onPress }) => {
       <View style={styles.footer}>
         <View style={[
           styles.statusContainer,
-          { backgroundColor: `${colors.taskStatus[task.status]}15` }
+          { backgroundColor: `${colors.taskStatus[task.status === 'in progress' ? 'inProgress' : task.status]}15` }
         ]}>
           <Ionicons 
             name={statusIcons[task.status]}
             size={16}
-            color={colors.taskStatus[task.status]}
+            color={colors.taskStatus[task.status === 'in progress' ? 'inProgress' : task.status]}
           />
-          <Text style={[styles.status, { color: colors.taskStatus[task.status] }]}>
+          <Text style={[styles.status, { color: colors.taskStatus[task.status === 'in progress' ? 'inProgress' : task.status] }]}>
             {getStatusText(task.status)}
           </Text>
         </View>
@@ -111,11 +111,6 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   title: {
     fontSize: 16,

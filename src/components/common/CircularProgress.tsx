@@ -116,7 +116,7 @@ export function CircularProgress({
         style={[
           styles.text,
           {
-            fontSize: size * 0.25,
+            fontSize: size * 0.2,
             color: textColor || colors.text,
           },
           textStyle,

@@ -7,24 +7,41 @@ import {
   useColorScheme,
   Alert,
   Modal,
+  Platform,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { getColors } from '../../constants/colors';
 import { Task, TaskStatus } from '../../types/task';
 import { TaskFormModal } from './TaskFormModal';
 
 interface TaskHeaderProps {
   task: Task;
-  onUpdate: (updatedTask: Task) => void;
-  onDelete: (taskId: string) => void;
-  onGoToChat: () => void;
+  onBack: () => void;
+  onMenuPress: () => void;
+  progress: number;
+  onGoToChat: () => Promise<void>;
+  onEditTask: () => void;
+  onDeleteTask: () => Promise<void>;
+  onUpdateTask: (data: { title: string; description: string; dueDate: string; status: TaskStatus }) => Promise<void>;
 }
+
+const statusIcons = {
+  'in progress': 'time-outline' as const,
+  'completed': 'checkmark-circle-outline' as const,
+  'expired': 'alert-circle-outline' as const,
+  'closed': 'close-circle-outline' as const,
+};
 
 export const TaskHeader: React.FC<TaskHeaderProps> = ({
   task,
-  onUpdate,
-  onDelete,
+  onBack,
+  onMenuPress,
+  progress,
   onGoToChat,
+  onEditTask,
+  onDeleteTask,
+  onUpdateTask,
 }) => {
   const colorScheme = useColorScheme() || 'light';
   const colors = getColors(colorScheme);
@@ -39,7 +56,12 @@ export const TaskHeader: React.FC<TaskHeaderProps> = ({
         status: newStatus,
         lastUpdated: new Date().toISOString(),
       };
-      await onUpdate(updatedTask);
+      await onUpdateTask({
+        title: updatedTask.title,
+        description: updatedTask.description,
+        dueDate: updatedTask.dueDate,
+        status: updatedTask.status,
+      });
     } catch (error) {
       Alert.alert('Error', 'Failed to update task status');
     }
@@ -57,30 +79,28 @@ export const TaskHeader: React.FC<TaskHeaderProps> = ({
 
   const confirmDelete = async () => {
     try {
-      await onDelete(task.id);
+      await onDeleteTask();
       setShowDeleteConfirm(false);
     } catch (error) {
       Alert.alert('Error', 'Failed to delete task');
     }
   };
 
-  const getStatusColor = (status: TaskStatus) => {
-    switch (status) {
-      case 'completed':
-        return colors.success;
-      case 'expired':
-        return colors.error;
-      case 'closed':
-        return colors.secondaryText;
-      default:
-        return colors.primary;
-    }
+  const getStatusText = (status: TaskStatus) => {
+    return status === 'in progress' ? 'In Progress' :
+           status.charAt(0).toUpperCase() + status.slice(1);
   };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <View style={styles.titleContainer}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={onBack}
+          >
+            <MaterialIcons name="arrow-back" size={24} color={colors.text} />
+          </TouchableOpacity>
           <Text style={[styles.title, { color: colors.text }]}>{task.title}</Text>
           <TouchableOpacity
             style={styles.menuButton}
@@ -92,22 +112,36 @@ export const TaskHeader: React.FC<TaskHeaderProps> = ({
       </View>
 
       <View style={styles.statusContainer}>
-        <TouchableOpacity
-          style={[
-            styles.statusButton,
-            { backgroundColor: getStatusColor(task.status) },
-          ]}
-          onPress={() => {
-            const statuses: TaskStatus[] = ['in progress', 'completed', 'expired', 'closed'];
-            const currentIndex = statuses.indexOf(task.status);
-            const nextStatus = statuses[(currentIndex + 1) % statuses.length];
-            handleStatusChange(nextStatus);
-          }}
-        >
-          <Text style={styles.statusText}>
-            {task.status.charAt(0).toUpperCase() + task.status.slice(1)}
+        <View style={[
+          styles.statusButton,
+          { backgroundColor: `${colors.taskStatus[task.status === 'in progress' ? 'inProgress' : task.status]}15` }
+        ]}>
+          <Ionicons 
+            name={statusIcons[task.status]}
+            size={20}
+            color={colors.taskStatus[task.status === 'in progress' ? 'inProgress' : task.status]}
+          />
+          <Text style={[
+            styles.statusText,
+            { color: colors.taskStatus[task.status === 'in progress' ? 'inProgress' : task.status] }
+          ]}>
+            {getStatusText(task.status)}
           </Text>
-        </TouchableOpacity>
+        </View>
+        
+        <View style={[
+          styles.progressContainer,
+          { backgroundColor: `${colors.primary}15` }
+        ]}>
+          <Ionicons 
+            name="pie-chart-outline"
+            size={20}
+            color={colors.primary}
+          />
+          <Text style={[styles.progressText, { color: colors.primary }]}>
+            {progress}%
+          </Text>
+        </View>
       </View>
 
       {showMenu && (
@@ -162,9 +196,19 @@ export const TaskHeader: React.FC<TaskHeaderProps> = ({
       <TaskFormModal
         visible={showEditModal}
         onClose={() => setShowEditModal(false)}
-        onSubmit={onUpdate}
+        onSubmit={onUpdateTask}
         initialData={task}
         mode="edit"
+        containerStyle={{
+          ...styles.editModalContainer,
+          backgroundColor: colors.cardBackground
+        }}
+        headerStyle={{
+          ...styles.editModalHeader,
+          borderBottomColor: colors.divider
+        }}
+        contentStyle={styles.editModalContent}
+        overlayStyle={styles.editModalOverlay}
       />
     </View>
   );
@@ -186,11 +230,14 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  backButton: {
+    padding: 8,
+    marginRight: 8,
+  },
   title: {
     fontSize: 24,
     fontWeight: '600',
     flex: 1,
-    marginRight: 16,
   },
   menuButton: {
     padding: 8,
@@ -199,16 +246,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
+    gap: 8,
   },
   statusButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
   },
   statusText: {
-    color: '#fff',
+    marginLeft: 6,
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '500',
   },
   menu: {
     position: 'absolute',
@@ -266,5 +316,39 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  progressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  progressText: {
+    marginLeft: 6,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  editModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+  },
+  editModalContainer: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    maxHeight: Platform.OS === 'ios' ? '85%' : '90%',
+    width: '100%',
+  },
+  editModalContent: {
+    padding: 16,
+    flex: 1,
+  },
+  editModalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
   },
 });

@@ -33,7 +33,7 @@ export const TaskSummarySection: React.FC<TaskSummarySectionProps> = ({
 
   const taskStats = {
     total: tasks.length,
-    inProgress: tasks.filter(task => task.status === 'inProgress').length,
+    inProgress: tasks.filter(task => task.status === 'in progress').length,
     completed: tasks.filter(task => task.status === 'completed').length,
     overdue: tasks.filter(task => task.status === 'expired').length,
   };
@@ -76,7 +76,7 @@ export const TaskSummarySection: React.FC<TaskSummarySectionProps> = ({
             onPress={() => onTaskPress(task)}
           >
             <View style={styles.taskItemContent}>
-              <View style={[styles.statusIndicator, { backgroundColor: colors.taskStatus[task.status] }]} />
+              <View style={[styles.statusIndicator, { backgroundColor: colors.taskStatus[task.status === 'in progress' ? 'inProgress' : task.status] }]} />
               <View style={styles.taskInfo}>
                 <Text style={[styles.taskTitle, { color: colors.text }]} numberOfLines={1}>
                   {task.title}

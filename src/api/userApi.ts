@@ -43,6 +43,21 @@ export const userApi = {
     }
   },
 
+  // Lookup user by email
+  lookupUserByEmail: async (email: string): Promise<UserResponse> => {
+    try {
+      // TODO: Replace with actual API call
+      const response = await fetch(`/api/users/lookup?email=${email}`);
+      if (!response.ok) {
+        throw new Error('User not found');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error looking up user:', error);
+      throw error;
+    }
+  },
+
   // Get user by ID
   getUser: async (userId: string): Promise<UserResponse> => {
     try {

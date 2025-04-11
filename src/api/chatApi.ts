@@ -104,4 +104,28 @@ export const chatApi = {
 
     return () => clearInterval(mockInterval);
   },
+
+  getOrCreateConversation: async (
+    taskId: string,
+    taskTitle: string,
+    participants: Array<{ id: string; name: string; email: string; role: 'member' }>
+  ) => {
+    try {
+      // TODO: Replace with actual API call
+      const response = await fetch(`/api/conversations/${taskId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ taskTitle, participants }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to create conversation');
+      }
+      return await response.json();
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      throw error;
+    }
+  },
 };

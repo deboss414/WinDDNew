@@ -14,7 +14,10 @@ import { TaskSubtasks } from './TaskSubtasks';
 
 interface TaskInfoProps {
   task: Task;
-  onUpdate: (updatedTask: Task) => void;
+  onEditPress: () => void;
+  onTaskUpdate: (data: { title: string; description: string; dueDate: string; status: TaskStatus }) => Promise<void>;
+  onParticipantAdd: (email: string) => Promise<void>;
+  onParticipantRemove: (email: string) => Promise<void>;
 }
 
 export const TaskInfo: React.FC<TaskInfoProps> = ({ task, onUpdate }) => {

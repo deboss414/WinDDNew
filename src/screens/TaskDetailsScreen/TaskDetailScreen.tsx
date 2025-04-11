@@ -22,7 +22,7 @@ import { fetchTaskDetails, updateSubTaskProgress, createSubTask, deleteSubTask, 
 import { SubTask } from '../../components/task/SubTask';
 import { SubTaskFormModal } from '../../components/task/SubTaskFormModal';
 import * as taskApi from '../../api/taskApi';
-import { lookupUserByEmail } from '../../api/userApi';
+import { userApi } from '../../api/userApi';
 import { TaskStatus, Task } from '../../types/task';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { chatApi } from '../../api/chatApi';
@@ -145,10 +145,7 @@ export const TaskDetailScreen: React.FC<Props> = ({ route }) => {
   const handleSubTaskSubmit = async (data: Omit<SubTask, 'id' | 'createdAt' | 'lastUpdated' | 'comments' | 'createdBy'>) => {
     try {
       setIsCreatingSubTask(true);
-      const updatedTask = await taskApi.createSubTask(taskId, {
-        ...data,
-        createdBy: 'Current User'
-      });
+      const updatedTask = await taskApi.createSubTask(taskId, data);
       setTask(updatedTask);
       setIsSubTaskModalVisible(false);
     } catch (error) {
@@ -268,13 +265,12 @@ export const TaskDetailScreen: React.FC<Props> = ({ route }) => {
     try {
       if (!task) return;
       
-      const updatedTask = await taskApi.updateTask(taskId, {
+      const response = await taskApi.updateTask(taskId, {
         ...data,
         participants: task.participants,
         subtasks: task.subtasks,
       });
-
-      setTask(updatedTask as Task);
+      setTask(response.task);
       setShowEditModal(false);
     } catch (error) {
       Alert.alert('Error', 'Failed to update task. Please try again.');
@@ -285,13 +281,12 @@ export const TaskDetailScreen: React.FC<Props> = ({ route }) => {
     try {
       if (!task) return;
       
-      const updatedTask = await taskApi.updateTask(taskId, {
+      const response = await taskApi.updateTask(taskId, {
         ...data,
         participants: task.participants,
         subtasks: task.subtasks,
       });
-
-      setTask(updatedTask as Task);
+      setTask(response.task);
     } catch (error) {
       Alert.alert('Error', 'Failed to update task. Please try again.');
     }
@@ -344,13 +339,13 @@ export const TaskDetailScreen: React.FC<Props> = ({ route }) => {
       setIsAddingParticipant(true);
       setParticipantError(null);
       
-      const user = await lookupUserByEmail(participantEmail);
+      const user = await userApi.lookupUserByEmail(participantEmail);
       if (!user) {
         setParticipantError('User not found');
         return;
       }
 
-      const displayName = `${user.first_name} ${user.last_name}`;
+      const displayName = `${user.user.first_name} ${user.user.last_name}`;
       setTask(prev => {
         if (!prev) return null;
         return {
@@ -409,18 +404,18 @@ export const TaskDetailScreen: React.FC<Props> = ({ route }) => {
     if (!task) return;
     
     try {
-      const user = await lookupUserByEmail(email);
-      if (!user) {
+      const userResponse = await userApi.lookupUserByEmail(email);
+      if (!userResponse.user) {
         throw new Error('User not found');
       }
 
-      const displayName = `${user.first_name} ${user.last_name}`;
-      const updatedTask = await taskApi.updateTask(taskId, {
+      const displayName = `${userResponse.user.first_name} ${userResponse.user.last_name}`;
+      const response = await taskApi.updateTask(taskId, {
         ...task,
         participants: [...task.participants, { email, displayName }]
       });
       
-      setTask(updatedTask as Task);
+      setTask(response.task);
     } catch (error) {
       throw error;
     }
@@ -430,12 +425,12 @@ export const TaskDetailScreen: React.FC<Props> = ({ route }) => {
     if (!task) return;
     
     try {
-      const updatedTask = await taskApi.updateTask(taskId, {
+      const response = await taskApi.updateTask(taskId, {
         ...task,
         participants: task.participants.filter(p => p.email !== email)
       });
       
-      setTask(updatedTask as Task);
+      setTask(response.task);
     } catch (error) {
       Alert.alert('Error', 'Failed to remove participant');
     }
@@ -459,9 +454,9 @@ export const TaskDetailScreen: React.FC<Props> = ({ route }) => {
 
   return (
     <KeyboardAvoidingView 
-      style={[styles.container, { backgroundColor: colors.background }]}
+      style={[styles.container, { backgroundColor: colors.background, paddingTop: Platform.OS === 'ios' ? 70 : 50 }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 140 : 50}
     >
       <TaskHeader
         task={task}

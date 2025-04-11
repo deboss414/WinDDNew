@@ -12,16 +12,18 @@ import {
   Platform,
   Animated,
   Dimensions,
+  ViewStyle,
+  KeyboardAvoidingView,
+  TouchableWithoutFeedback,
 } from 'react-native';
-import type { ViewStyle, TextStyle, TouchableOpacityProps, ScrollViewProps } from 'react-native';
+import type { TouchableOpacityProps, ScrollViewProps } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { getColors } from '../../constants/colors';
 import { Task, TaskStatus } from '../../types/task';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { KeyboardAvoidingView } from 'react-native';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
-const MODAL_HEIGHT = SCREEN_HEIGHT * 0.9;
+const MODAL_HEIGHT = SCREEN_HEIGHT * 0.85;
 
 interface TaskFormModalProps {
   visible: boolean;
@@ -29,6 +31,10 @@ interface TaskFormModalProps {
   onSubmit: (data: Task) => void;
   initialData?: Task;
   mode?: 'create' | 'edit';
+  containerStyle?: ViewStyle;
+  headerStyle?: ViewStyle;
+  contentStyle?: ViewStyle;
+  overlayStyle?: ViewStyle;
 }
 
 export const TaskFormModal: React.FC<TaskFormModalProps> = ({
@@ -37,6 +43,10 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
   onSubmit,
   initialData,
   mode = 'create',
+  containerStyle,
+  headerStyle,
+  contentStyle,
+  overlayStyle,
 }) => {
   const colorScheme = useColorScheme() || 'light';
   const colors = getColors(colorScheme);
@@ -46,6 +56,7 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [dueDate, setDueDate] = useState(new Date());
+  const [tempDate, setTempDate] = useState(new Date());
   const [status, setStatus] = useState<TaskStatus>('in progress');
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
@@ -57,16 +68,14 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
       
       // Start the slide-up animation
       Animated.parallel([
-        Animated.spring(slideAnim, {
+        Animated.timing(slideAnim, {
           toValue: 0,
+          duration: 400,
           useNativeDriver: true,
-          damping: 20,
-          mass: 0.8,
-          stiffness: 100,
         }),
         Animated.timing(fadeAnim, {
           toValue: 1,
-          duration: 300,
+          duration: 400,
           useNativeDriver: true,
         }),
       ]).start();
@@ -82,16 +91,14 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
     } else {
       // Slide down when closing
       Animated.parallel([
-        Animated.spring(slideAnim, {
+        Animated.timing(slideAnim, {
           toValue: SCREEN_HEIGHT,
+          duration: 400,
           useNativeDriver: true,
-          damping: 20,
-          mass: 0.8,
-          stiffness: 100,
         }),
         Animated.timing(fadeAnim, {
           toValue: 0,
-          duration: 300,
+          duration: 400,
           useNativeDriver: true,
         }),
       ]).start();
@@ -108,10 +115,21 @@ export const TaskFormModal: React.FC<TaskFormModalProps> = ({
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
-    setShowDatePicker(false);
-    if (selectedDate) {
-      setDueDate(selectedDate);
+    if (Platform.OS === 'android') {
+      setShowDatePicker(false);
+      if (selectedDate) {
+        setDueDate(selectedDate);
+      }
+    } else {
+      if (selectedDate) {
+        setTempDate(selectedDate);
+      }
     }
+  };
+
+  const handleDatePickerDone = () => {
+    setDueDate(tempDate);
+    setShowDatePicker(false);
   };
 
   const handleSubmit = async () => {
@@ -184,222 +202,237 @@ const FormScrollView: React.FC<ScrollViewProps> = ({ children, ...props }) => (
       onRequestClose={onClose}
       animationType="none"
     >
-      <View style={styles.modalContainer}>
-        <Animated.View
-          style={[
-            styles.modalOverlay,
-            {
-              opacity: fadeAnim,
-            },
-          ]}
-        >
-          <BackdropTouchable 
-            style={styles.backdrop} 
-            activeOpacity={1} 
-            onPress={handleBackdropPress}
-          >
-            <View style={styles.backdrop} />
-          </BackdropTouchable>
-
+      <TouchableWithoutFeedback onPress={handleBackdropPress}>
+        <View style={styles.modalContainer}>
           <Animated.View
             style={[
-              styles.modalContent,
+              styles.modalOverlay,
               {
-                backgroundColor: colors.background,
-                transform: [{ translateY: slideAnim }],
-                maxHeight: MODAL_HEIGHT,
+                opacity: fadeAnim,
               },
+              overlayStyle
             ]}
           >
-            <KeyboardAvoidingView 
-              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-              style={styles.keyboardView}
-              keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
-            >
-              {/* Header */}
-              <View style={styles.header}>
-                <Text style={[styles.title, { color: colors.text }]}>
-                  {mode === 'create' ? 'Create Task' : 'Edit Task'}
-                </Text>
-                <CloseButton
-                  onPress={handleBackdropPress}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                >
-                  <MaterialIcons name="close" size={28} color={colors.text} />
-                </CloseButton>
-              </View>
-
-              <FormScrollView 
-                style={styles.form} 
-                showsVerticalScrollIndicator={false}
-                keyboardShouldPersistTaps="handled"
-                contentContainerStyle={styles.formContent}
+            <TouchableWithoutFeedback>
+              <Animated.View
+                style={[
+                  styles.modalContent,
+                  {
+                    transform: [{ translateY: slideAnim }],
+                    backgroundColor: colors.cardBackground,
+                  },
+                  containerStyle
+                ]}
               >
-                {/* Title */}
-                <View style={styles.inputGroup}>
-                  <Text style={[styles.label, { color: colors.text }]}>Title *</Text>
-                  <TextInput
-                    style={[
-                      styles.input,
-                      {
-                        backgroundColor: colors.cardBackground,
-                        color: colors.text,
-                        borderColor: colors.divider,
-                      },
-                    ]}
-                    placeholder="Enter task title"
-                    placeholderTextColor={colors.secondaryText}
-                    value={title}
-                    onChangeText={setTitle}
-                    maxLength={50}
-                  />
-                  <Text style={[styles.characterCount, { color: colors.secondaryText }]}>
-                    {title.length}/50 characters
-                  </Text>
-                </View>
-
-                {/* Description */}
-                <View style={styles.inputGroup}>
-                  <Text style={[styles.label, { color: colors.text }]}>Description</Text>
-                  <TextInput
-                    style={[
-                      styles.textArea,
-                      {
-                        backgroundColor: colors.cardBackground,
-                        color: colors.text,
-                        borderColor: colors.divider,
-                      },
-                    ]}
-                    placeholder="Enter task description"
-                    placeholderTextColor={colors.secondaryText}
-                    value={description}
-                    onChangeText={setDescription}
-                    multiline
-                    numberOfLines={4}
-                    textAlignVertical="top"
-                  />
-                </View>
-
-                {/* Due Date */}
-                <View style={styles.inputGroup}>
-                  <Text style={[styles.label, { color: colors.text }]}>Due Date *</Text>
-                  <TouchableOpacity
-                    style={[
-                      styles.input,
-                      {
-                        backgroundColor: colors.cardBackground,
-                        borderColor: colors.divider,
-                      },
-                    ]}
-                    onPress={() => setShowDatePicker(true)}
+                <KeyboardAvoidingView
+                  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                  style={{ flex: 1 }}
+                  keyboardVerticalOffset={Platform.OS === 'ios' ? 40 : 0}
+                >
+                  <View style={[styles.modalHeader, headerStyle]}>
+                    <Text style={[styles.modalTitle, { color: colors.text }]}>
+                      {mode === 'create' ? 'Create Task' : 'Edit Task'}
+                    </Text>
+                    <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+                      <MaterialIcons name="close" size={24} color={colors.text} />
+                    </TouchableOpacity>
+                  </View>
+                  <ScrollView 
+                    style={[styles.formContent, contentStyle]}
+                    showsVerticalScrollIndicator={false}
+                    keyboardShouldPersistTaps="handled"
+                    keyboardDismissMode="none"
                   >
-                    <View style={styles.dateInputContent}>
-                      <Text
+                    {/* Title */}
+                    <View style={styles.inputGroup}>
+                      <Text style={[styles.label, { color: colors.text }]}>Title *</Text>
+                      <TextInput
                         style={[
-                          styles.inputText,
-                          { color: dueDate ? colors.text : colors.secondaryText },
+                          styles.input,
+                          {
+                            backgroundColor: colors.cardBackground,
+                            color: colors.text,
+                            borderColor: colors.divider,
+                          },
                         ]}
-                      >
-                        {dueDate.toLocaleDateString()}
+                        placeholder="Enter task title"
+                        placeholderTextColor={colors.secondaryText}
+                        value={title}
+                        onChangeText={setTitle}
+                        maxLength={50}
+                      />
+                      <Text style={[styles.characterCount, { color: colors.secondaryText }]}>
+                        {title.length}/50 characters
                       </Text>
-                      <MaterialIcons name="calendar-today" size={22} color={colors.text} />
                     </View>
-                  </TouchableOpacity>
-                  {showDatePicker && (
+
+                    {/* Description */}
+                    <View style={styles.inputGroup}>
+                      <Text style={[styles.label, { color: colors.text }]}>Description</Text>
+                      <TextInput
+                        style={[
+                          styles.textArea,
+                          {
+                            backgroundColor: colors.cardBackground,
+                            color: colors.text,
+                            borderColor: colors.divider,
+                          },
+                        ]}
+                        placeholder="Enter task description"
+                        placeholderTextColor={colors.secondaryText}
+                        value={description}
+                        onChangeText={setDescription}
+                        multiline
+                        numberOfLines={4}
+                        textAlignVertical="top"
+                      />
+                    </View>
+
+                    {/* Due Date */}
+                    <View style={styles.inputGroup}>
+                      <Text style={[styles.label, { color: colors.text }]}>Due Date *</Text>
+                      <TouchableOpacity
+                        style={[
+                          styles.input,
+                          {
+                            backgroundColor: colors.cardBackground,
+                            borderColor: colors.divider,
+                          },
+                        ]}
+                        onPress={() => {
+                          setTempDate(dueDate);
+                          setShowDatePicker(true);
+                        }}
+                      >
+                        <View style={styles.dateInputContent}>
+                          <Text
+                            style={[
+                              styles.inputText,
+                              { color: dueDate ? colors.text : colors.secondaryText },
+                            ]}
+                          >
+                            {dueDate.toLocaleDateString()}
+                          </Text>
+                          <MaterialIcons name="calendar-today" size={22} color={colors.text} />
+                        </View>
+                      </TouchableOpacity>
+                      {showDatePicker && (
+                        <View
+                          style={[
+                            styles.datePickerContainer,
+                            {
+                              backgroundColor: colors.cardBackground,
+                              borderColor: colors.divider,
+                            },
+                          ]}
+                        >
+                          {Platform.OS === 'ios' && (
+                            <View style={styles.datePickerHeader}>
+                              <TouchableOpacity
+                                onPress={() => setShowDatePicker(false)}
+                                style={styles.datePickerButton}
+                              >
+                                <Text style={[styles.datePickerButtonText, { color: colors.text }]}>
+                                  Cancel
+                                </Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity
+                                onPress={handleDatePickerDone}
+                                style={styles.datePickerButton}
+                              >
+                                <Text style={[styles.datePickerButtonText, { color: colors.primary }]}>
+                                  Done
+                                </Text>
+                              </TouchableOpacity>
+                            </View>
+                          )}
+                          <DateTimePicker
+                            value={Platform.OS === 'ios' ? tempDate : dueDate}
+                            mode="date"
+                            display={Platform.OS === 'ios' ? 'inline' : 'default'}
+                            onChange={handleDateChange}
+                            minimumDate={new Date()}
+                            textColor={colors.text}
+                            style={styles.datePicker}
+                            themeVariant={colorScheme}
+                          />
+                        </View>
+                      )}
+                    </View>
+
+                    {/* Status */}
+                    <View style={styles.inputGroup}>
+                      <Text style={[styles.label, { color: colors.text }]}>Status *</Text>
+                      <TouchableOpacity
+                        style={[
+                          styles.input,
+                          {
+                            backgroundColor: colors.cardBackground,
+                            borderColor: colors.divider,
+                          },
+                        ]}
+                        onPress={() => setShowStatusDropdown(!showStatusDropdown)}
+                      >
+                        <View style={styles.statusInputContent}>
+                          <Text style={[styles.inputText, { color: colors.text }]}>
+                            {status.charAt(0).toUpperCase() + status.slice(1)}
+                          </Text>
+                          <MaterialIcons
+                            name={showStatusDropdown ? 'expand-less' : 'expand-more'}
+                            size={24}
+                            color={colors.text}
+                          />
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+
+                    {/* Submit Button */}
+                    <SubmitButton
+                      onPress={handleSubmit}
+                      style={[
+                        styles.submitButton,
+                        { backgroundColor: colors.primary },
+                      ]}
+                    >
+                      <Text style={[styles.submitButtonText, { color: '#fff' }]}>
+                        {mode === 'create' ? 'Create' : 'Update'}
+                      </Text>
+                    </SubmitButton>
+                  </ScrollView>
+
+                  {/* Status Dropdown */}
+                  {showStatusDropdown && (
                     <View
                       style={[
-                        styles.datePickerContainer,
+                        styles.dropdown,
                         {
                           backgroundColor: colors.cardBackground,
                           borderColor: colors.divider,
                         },
                       ]}
                     >
-                      <DateTimePicker
-                        value={dueDate}
-                        mode="date"
-                        display={Platform.OS === 'ios' ? 'inline' : 'calendar'}
-                        onChange={handleDateChange}
-                        minimumDate={new Date()}
-                        textColor={colors.text}
-                        style={styles.datePicker}
-                        themeVariant={colorScheme}
-                      />
+                      {['in progress', 'completed', 'expired', 'closed'].map((statusOption) => (
+                        <DropdownItem
+                          key={statusOption}
+                          style={styles.dropdownItem}
+                          onPress={() => {
+                            setStatus(statusOption as TaskStatus);
+                            setShowStatusDropdown(false);
+                          }}
+                        >
+                          <Text style={[styles.dropdownItemText, { color: colors.text }]}>
+                            {statusOption.charAt(0).toUpperCase() + statusOption.slice(1)}
+                          </Text>
+                        </DropdownItem>
+                      ))}
                     </View>
                   )}
-                </View>
-
-                {/* Status */}
-                <View style={styles.inputGroup}>
-                  <Text style={[styles.label, { color: colors.text }]}>Status *</Text>
-                  <TouchableOpacity
-                    style={[
-                      styles.input,
-                      {
-                        backgroundColor: colors.cardBackground,
-                        borderColor: colors.divider,
-                      },
-                    ]}
-                    onPress={() => setShowStatusDropdown(!showStatusDropdown)}
-                  >
-                    <View style={styles.statusInputContent}>
-                      <Text style={[styles.inputText, { color: colors.text }]}>
-                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                      </Text>
-                      <MaterialIcons
-                        name={showStatusDropdown ? 'expand-less' : 'expand-more'}
-                        size={24}
-                        color={colors.text}
-                      />
-                    </View>
-                  </TouchableOpacity>
-                </View>
-
-                {/* Submit Button */}
-                <SubmitButton
-                  onPress={handleSubmit}
-                  style={[
-                    styles.submitButton,
-                    { backgroundColor: colors.primary },
-                  ]}
-                >
-                  <Text style={[styles.submitButtonText, { color: '#fff' }]}>
-                    {mode === 'create' ? 'Create' : 'Update'}
-                  </Text>
-                </SubmitButton>
-              </FormScrollView>
-
-              {/* Status Dropdown */}
-              {showStatusDropdown && (
-                <View
-                  style={[
-                    styles.dropdown,
-                    {
-                      backgroundColor: colors.cardBackground,
-                      borderColor: colors.divider,
-                    },
-                  ]}
-                >
-                  {['in progress', 'completed', 'expired', 'closed'].map((statusOption) => (
-                    <DropdownItem
-                      key={statusOption}
-                      style={styles.dropdownItem}
-                      onPress={() => {
-                        setStatus(statusOption as TaskStatus);
-                        setShowStatusDropdown(false);
-                      }}
-                    >
-                      <Text style={[styles.dropdownItemText, { color: colors.text }]}>
-                        {statusOption.charAt(0).toUpperCase() + statusOption.slice(1)}
-                      </Text>
-                    </DropdownItem>
-                  ))}
-                </View>
-              )}
-            </KeyboardAvoidingView>
+                </KeyboardAvoidingView>
+              </Animated.View>
+            </TouchableWithoutFeedback>
           </Animated.View>
-        </Animated.View>
-      </View>
+        </View>
+      </TouchableWithoutFeedback>
     </Modal>
   );
 };
@@ -407,20 +440,28 @@ const FormScrollView: React.FC<ScrollViewProps> = ({ children, ...props }) => (
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    justifyContent: 'flex-end',
   },
   modalOverlay: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: 'rgba(0, 0, 0, 0.6)',
   },
   backdrop: {
-    flex: 1,
-  },
-  keyboardView: {
-    width: '100%',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   modalContent: {
-    width: '100%',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    maxHeight: MODAL_HEIGHT,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     overflow: 'hidden',
@@ -496,11 +537,26 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     overflow: 'hidden',
-    padding: Platform.OS === 'ios' ? 10 : 0,
+    padding: Platform.OS === 'ios' ? 0 : 0,
+  },
+  datePickerHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  datePickerButton: {
+    padding: 4,
+  },
+  datePickerButtonText: {
+    fontSize: 16,
+    fontWeight: '500',
   },
   datePicker: {
     width: '100%',
-    height: Platform.OS === 'ios' ? 200 : undefined,
+    height: Platform.OS === 'ios' ? 300 : undefined,
   },
   statusInputContent: {
     flexDirection: 'row',
@@ -534,5 +590,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 4,
     textAlign: 'right',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+  },
+  closeButton: {
+    padding: 8,
   },
 }); 

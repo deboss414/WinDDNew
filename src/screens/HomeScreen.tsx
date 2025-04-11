@@ -36,7 +36,7 @@ export const HomeScreen: React.FC = () => {
       title: 'Complete Project Presentation',
       description: 'Create a comprehensive presentation for the client meeting',
       dueDate: '2024-03-25',
-      status: 'inProgress',
+      status: 'in progress',
       createdBy: 'John Doe',
       createdAt: '2024-03-20T10:00:00Z',
       lastUpdated: '2024-03-20T10:00:00Z',
@@ -100,7 +100,7 @@ export const HomeScreen: React.FC = () => {
     if (activeFilter) {
       switch (activeFilter.toLowerCase()) {
         case 'in progress':
-          return task.status === 'inProgress';
+          return task.status === 'in progress';
         case 'completed':
           return task.status === 'completed';
         case 'overdue':
@@ -118,7 +118,7 @@ export const HomeScreen: React.FC = () => {
       showsVerticalScrollIndicator={false}
     >
       <TopSection
-        inProgressCount={tasks.filter(task => task.status === 'inProgress').length}
+        inProgressCount={tasks.filter(task => task.status === 'in progress').length}
         onSearch={handleSearch}
         onFilterChange={handleFilterChange}
       />
