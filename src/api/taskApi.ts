@@ -5,32 +5,32 @@ const mockTasks: Task[] = [
   {
     id: '1',
     title: 'Project Planning',
-    description: 'Create a detailed project plan including timeline, resources, and milestones.',
+    description: 'Create a detailed project plan including timeline, resources, and milestones. This is a test description. And often times it is longer than the title. Most people will not read it. Those who do not have the same mentatlity would not understand',
     status: 'in progress',
     dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
     createdAt: new Date().toISOString(),
     lastUpdated: new Date().toISOString(),
-    createdBy: 'user@example.com',
+    createdBy: 'john.doe@example.com',
     participants: [
-      { email: 'user@example.com', displayName: 'John Doe' },
-      { email: 'colleague@example.com', displayName: 'Jane Smith' }
+      { email: 'john.doe@example.com', displayName: 'John Doe' },
+      { email: 'jane.smith@example.com', displayName: 'Jane Smith' }
     ],
     subtasks: [
       {
         id: '1-1',
         title: 'Research Requirements',
         description: 'Research and document project requirements',
-        assignee: ['user@example.com'],
+        assignee: ['john.doe@example.com'],
         progress: 100,
         dueDate: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         lastUpdated: new Date().toISOString(),
-        createdBy: 'user@example.com',
+        createdBy: 'john.doe@example.com',
         comments: [
           {
             id: '1-1-1',
             text: 'Requirements research completed',
-            authorId: 'user@example.com',
+            authorId: 'john.doe@example.com',
             authorName: 'John Doe',
             createdAt: new Date().toISOString(),
             isEdited: false,
@@ -47,7 +47,7 @@ const mockTasks: Task[] = [
         dueDate: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         lastUpdated: new Date().toISOString(),
-        createdBy: 'user@example.com',
+        createdBy: 'john.doe@example.com',
         comments: []
       }
     ]

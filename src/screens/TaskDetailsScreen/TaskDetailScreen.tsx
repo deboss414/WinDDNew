@@ -13,6 +13,8 @@ import {
   Platform,
   Dimensions,
   KeyboardAvoidingView,
+  FlatList,
+  RefreshControl,
 } from 'react-native';
 import { RouteProp, useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -30,6 +32,7 @@ import { TaskHeader } from '../../components/task/TaskHeader';
 import { TaskInfo } from '../../components/task/TaskInfo';
 import { TaskSubtasks } from '../../components/task/TaskSubtasks';
 import { Comment } from './components/Comment';
+import { SubTaskList } from '../../components/task/SubTaskList';
 
 type RootStackParamList = {
   TaskDetail: { taskId: string };
@@ -75,6 +78,7 @@ export const TaskDetailScreen: React.FC<Props> = ({ route }) => {
     dueDate: new Date(),
     status: 'in progress' as TaskStatus,
   });
+  const [refreshing, setRefreshing] = useState(false);
 
   // Add navigation options
   React.useLayoutEffect(() => {
@@ -145,8 +149,17 @@ export const TaskDetailScreen: React.FC<Props> = ({ route }) => {
   const handleSubTaskSubmit = async (data: Omit<SubTask, 'id' | 'createdAt' | 'lastUpdated' | 'comments' | 'createdBy'>) => {
     try {
       setIsCreatingSubTask(true);
-      const updatedTask = await taskApi.createSubTask(taskId, data);
-      setTask(updatedTask);
+      const newSubTask = await taskApi.createSubTask(taskId, data);
+      
+      // Update the task state with the new subtask
+      setTask(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          subtasks: [...(prev.subtasks as SubTask[]), newSubTask]
+        } as Task;
+      });
+      
       setIsSubTaskModalVisible(false);
     } catch (error) {
       console.error('Error creating subtask:', error);
@@ -436,6 +449,12 @@ export const TaskDetailScreen: React.FC<Props> = ({ route }) => {
     }
   };
 
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await loadTaskDetails();
+    setRefreshing(false);
+  };
+
   if (loading) {
     return (
       <View style={[styles.container, styles.centered, { backgroundColor: colors.background }]}>
@@ -454,7 +473,7 @@ export const TaskDetailScreen: React.FC<Props> = ({ route }) => {
 
   return (
     <KeyboardAvoidingView 
-      style={[styles.container, { backgroundColor: colors.background, paddingTop: Platform.OS === 'ios' ? 70 : 50 }]}
+      style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 140 : 50}
     >
@@ -469,39 +488,53 @@ export const TaskDetailScreen: React.FC<Props> = ({ route }) => {
         onUpdateTask={handleUpdateTask}
       />
 
-      <ScrollView
-        style={styles.scrollView}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <TaskInfo
-          task={task}
-          onEditPress={() => setIsEditing(true)}
-          onTaskUpdate={handleTaskInfoUpdate}
-          onParticipantAdd={handleParticipantAdd}
-          onParticipantRemove={(email: string) => handleParticipantRemove(email)}
-        />
+      <FlatList
+        data={[1]} // Single item to render the content
+        renderItem={({ index }) => (
+          <View key={`task-details-${index}`}>
+            <TaskInfo
+              task={task}
+              onEditPress={() => setIsEditing(true)}
+              onTaskUpdate={handleTaskInfoUpdate}
+              onParticipantAdd={handleParticipantAdd}
+              onParticipantRemove={handleParticipantRemove}
+            />
 
-        <TaskSubtasks
-          taskId={taskId}
-          subtasks={task.subtasks}
-          onAddComment={handleAddComment}
-          onEditComment={handleEditComment}
-          onDeleteComment={handleDeleteComment}
-          onProgressChange={handleSubTaskProgressChange}
-          onUpdateSubTask={handleUpdateSubTask}
-          onSubtaskCreate={handleSubTaskSubmit}
-          participants={task.participants.map(p => ({ email: p.email, displayName: p.displayName }))}
-        />
-      </ScrollView>
+            {/* Subtasks Section */}
+            <View style={styles.section}>
+              <SubTaskList
+                subtasks={task.subtasks}
+                onSubTaskPress={(subtask) => {
+                  console.log('Subtask pressed:', subtask);
+                }}
+                onProgressChange={handleSubTaskProgressChange}
+                canEditProgress={(subtask) => true}
+                onAddSubTask={() => setShowSubTaskModal(true)}
+                onAddComment={handleAddComment}
+                onEditComment={handleEditComment}
+                onDeleteComment={handleDeleteComment}
+                participants={task.participants.map(p => p.email)}
+                onRefresh={loadTaskDetails}
+                isLoading={loading}
+              />
+            </View>
+          </View>
+        )}
+        keyExtractor={(_, index) => `task-details-${index}`}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
+      />
 
       <SubTaskFormModal
-        visible={isSubTaskModalVisible}
-        onClose={() => {
-          if (!isCreatingSubTask) {
-            setIsSubTaskModalVisible(false);
-          }
-        }}
+        visible={showSubTaskModal}
+        onClose={() => setShowSubTaskModal(false)}
         onSubmit={handleSubTaskSubmit}
         participants={task.participants.map(p => p.displayName)}
         isSubmitting={isCreatingSubTask}

@@ -46,12 +46,17 @@ export const userApi = {
   // Lookup user by email
   lookupUserByEmail: async (email: string): Promise<UserResponse> => {
     try {
-      // TODO: Replace with actual API call
-      const response = await fetch(`/api/users/lookup?email=${email}`);
-      if (!response.ok) {
-        throw new Error('User not found');
-      }
-      return await response.json();
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // For testing, return mock user for any email
+      return {
+        user: {
+          ...mockUser,
+          email,
+          displayName: email.split('@')[0]
+        }
+      };
     } catch (error) {
       console.error('Error looking up user:', error);
       throw error;
