@@ -18,7 +18,7 @@ import { chatApi } from '../../api/chatApi';
 import type { Conversation, Message } from '../../types/chat';
 import type { ChatStackParamList } from '../../navigation/ChatNavigator';
 import type { StackNavigationProp } from '@react-navigation/stack';
-import type { TaskStatus } from '../../components/task/TaskCard';
+import type { TaskStatus } from '../../types/task';
 
 type ConversationsListScreenNavigationProp = StackNavigationProp<ChatStackParamList, 'ConversationsList'>;
 
@@ -26,14 +26,45 @@ type ConversationsListScreenNavigationProp = StackNavigationProp<ChatStackParamL
 const messageCache = new Map<string, Message[]>();
 const CACHE_STORAGE_KEY = '@chat_message_cache';
 
+// Helper function to convert ChatMessage to Message
+const convertChatMessageToMessage = (chatMessage: any, conversationId: string): Message => ({
+  id: chatMessage.id,
+  conversationId,
+  senderId: chatMessage.createdBy,
+  senderName: chatMessage.createdBy,
+  content: chatMessage.text,
+  timestamp: new Date(chatMessage.createdAt).toISOString(),
+  readBy: [],
+});
+
+// Helper function to convert API Conversation to component Conversation
+const convertApiConversation = (apiConversation: any): Conversation => ({
+  id: apiConversation.id,
+  taskId: apiConversation.taskId,
+  taskTitle: apiConversation.taskTitle,
+  taskStatus: apiConversation.taskStatus,
+  participants: apiConversation.participants,
+  lastMessage: apiConversation.lastMessage ? {
+    id: apiConversation.lastMessage.id,
+    conversationId: apiConversation.id,
+    senderId: apiConversation.lastMessage.senderName,
+    senderName: apiConversation.lastMessage.senderName,
+    content: apiConversation.lastMessage.content,
+    timestamp: new Date(apiConversation.lastMessage.createdAt).toISOString(),
+    readBy: [],
+  } : undefined,
+  updatedAt: apiConversation.updatedAt,
+  unreadCount: apiConversation.unreadCount,
+});
+
 export const ConversationsListScreen: React.FC = () => {
   const navigation = useNavigation<ConversationsListScreenNavigationProp>();
-  const colorScheme = useColorScheme() ?? null;
+  const colorScheme = useColorScheme() ?? 'light';
   const colors = getColors(colorScheme);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<TaskStatus | 'all'>('inProgress');
+  const [activeTab, setActiveTab] = useState<TaskStatus | 'all'>('in progress');
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilter, setShowFilter] = useState(false);
   const [preloadingProgress, setPreloadingProgress] = useState(0);
@@ -60,7 +91,11 @@ export const ConversationsListScreen: React.FC = () => {
 
   const saveCacheToStorage = async () => {
     try {
-      const cacheObject = Object.fromEntries(messageCache);
+      // Convert Map to object manually since Object.fromEntries might not be available
+      const cacheObject: Record<string, Message[]> = {};
+      messageCache.forEach((value, key) => {
+        cacheObject[key] = value;
+      });
       await AsyncStorage.setItem(CACHE_STORAGE_KEY, JSON.stringify(cacheObject));
     } catch (error) {
       console.error('Failed to save message cache:', error);
@@ -76,7 +111,10 @@ export const ConversationsListScreen: React.FC = () => {
       }
 
       const conversationData = await chatApi.getConversation(conversationId);
-      messageCache.set(conversationId, conversationData.messages);
+      const convertedMessages = conversationData.messages.map(msg => 
+        convertChatMessageToMessage(msg, conversationId)
+      );
+      messageCache.set(conversationId, convertedMessages);
       
       // Update preloading progress
       setPreloadingProgress(prev => prev + 1);
@@ -95,10 +133,11 @@ export const ConversationsListScreen: React.FC = () => {
       await loadCacheFromStorage();
       
       const data = await chatApi.getConversations();
-      setConversations(data);
+      const convertedConversations = data.map(convertApiConversation);
+      setConversations(convertedConversations);
       
       // Start preloading messages for each conversation
-      data.forEach(conversation => {
+      convertedConversations.forEach(conversation => {
         preloadMessages(conversation.id);
       });
     } catch (err) {
@@ -194,7 +233,7 @@ export const ConversationsListScreen: React.FC = () => {
     const isActive = activeTab === status;
     const statusColors = {
       all: colors.primary,
-      inProgress: colors.taskStatus.inProgress,
+      'in progress': colors.taskStatus.inProgress,
       completed: colors.taskStatus.completed,
       expired: colors.taskStatus.expired,
       closed: colors.secondaryText,
@@ -216,7 +255,7 @@ export const ConversationsListScreen: React.FC = () => {
           name={
             status === 'all' ? 'chatbubbles-outline' :
             status === 'completed' ? 'checkmark-done' :
-            status === 'inProgress' ? 'pulse' :
+            status === 'in progress' ? 'pulse' :
             status === 'expired' ? 'timer-outline' :
             'close'
           }
@@ -228,7 +267,7 @@ export const ConversationsListScreen: React.FC = () => {
           { color: isActive ? statusColors[status] : colors.secondaryText }
         ]}>
           {status === 'all' ? 'All Chats' :
-           status === 'inProgress' ? 'Active' :
+           status === 'in progress' ? 'Active' :
            status.charAt(0).toUpperCase() + status.slice(1)}
         </Text>
         <Text style={[
@@ -342,7 +381,7 @@ export const ConversationsListScreen: React.FC = () => {
                 <Ionicons name="close" size={24} color={colors.secondaryText} />
               </TouchableOpacity>
             </View>
-            {(['all', 'inProgress', 'completed', 'expired', 'closed'] as (TaskStatus | 'all')[]).map(renderFilterOption)}
+            {(['all', 'in progress', 'completed', 'expired', 'closed'] as (TaskStatus | 'all')[]).map(renderFilterOption)}
           </View>
         </TouchableOpacity>
       </Modal>

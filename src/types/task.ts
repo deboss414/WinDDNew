@@ -11,6 +11,7 @@ export interface Task {
   lastUpdated: string;
   participants: Participant[];
   subtasks: SubTask[];
+  progress?: number;
 }
 
 export interface SubTask {

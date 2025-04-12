@@ -217,6 +217,7 @@ export const TaskHeader: React.FC<TaskHeaderProps> = ({
 const styles = StyleSheet.create({
   container: {
     padding: 16,
+    paddingTop: Platform.OS === 'ios' ? 60 : 24,
   },
   header: {
     flexDirection: 'row',

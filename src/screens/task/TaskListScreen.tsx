@@ -12,7 +12,7 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { TaskCard, Task } from '../../components/task/TaskCard';
-import { fetchTasks } from '../../api/taskApi';
+import { taskApi } from '../../api/taskApi';
 import { MainStackParamList } from '../../navigation/MainStack';
 import { getColors } from '../../constants/colors';
 
@@ -34,11 +34,20 @@ export const TaskListScreen: React.FC = () => {
       justifyContent: 'center',
       alignItems: 'center',
     },
+    titleContainer: {
+      padding: 16,
+      paddingBottom: 8,
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: '600',
+    },
     listContent: {
       padding: 16,
+      paddingTop: 0,
     },
     cardContainer: {
-      marginBottom: 16,
+      marginBottom: 4,
     },
     errorText: {
       fontSize: 16,
@@ -51,7 +60,7 @@ export const TaskListScreen: React.FC = () => {
       borderRadius: 8,
     },
     retryText: {
-      color: colors.primaryTint,
+      color: colors.primary,
       fontSize: 16,
       fontWeight: '600',
     },
@@ -77,8 +86,8 @@ export const TaskListScreen: React.FC = () => {
     try {
       setLoading(true);
       setError(null);
-      const fetchedTasks = await fetchTasks();
-      setTasks(fetchedTasks);
+      const response = await taskApi.getTasks();
+      setTasks(response.tasks);
     } catch (err) {
       setError('Failed to load tasks');
     } finally {
@@ -114,6 +123,9 @@ export const TaskListScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.titleContainer}>
+        <Text style={[styles.title, { color: colors.text }]}>Tasks</Text>
+      </View>
       <FlatList
         data={tasks}
         keyExtractor={(item) => item.id}
@@ -133,7 +145,7 @@ export const TaskListScreen: React.FC = () => {
         style={styles.fab}
         onPress={() => navigation.navigate('TaskForm')}
       >
-        <Ionicons name="add" size={24} color={colors.primaryTint} />
+        <Ionicons name="add" size={24} color="#FFFFFF" />
       </TouchableOpacity>
     </View>
   );

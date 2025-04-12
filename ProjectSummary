@@ -8,6 +8,17 @@ WinDD is a React Native mobile application built with Expo, designed to manage t
 ### Frontend Structure
 1. **Components**
    - **Task Components**
+     - `SubTaskCard`: Enhanced card component for subtask display
+       - Implements expandable design
+       - Features avatar display for assignees
+       - Shows comment count with icon
+       - Edge-to-edge design with proper spacing
+       - Enhanced section contrast for better visibility
+     - `SubTaskList`: Advanced list component for subtasks
+       - Implements dividers between items
+       - Optimized performance with memoization
+       - Handles pull-to-refresh
+       - Supports empty and loading states
      - `TaskFormModal`: Enhanced modal for task creation/editing
        - Implements platform-specific date picker behavior
        - Features Cancel/Done buttons for iOS date selection

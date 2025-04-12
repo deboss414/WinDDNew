@@ -5,19 +5,15 @@ import {
   StyleSheet,
   TouchableOpacity,
   useColorScheme,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getColors } from '../../constants/colors';
 import { SubTask } from './SubTask';
-import { TaskStatus } from '@/types/task';
+import { TaskStatus, Task as TaskType } from '@/types/task';
+import { CircularProgress } from '../common/CircularProgress';
 
-export interface Task {
-  id: string;
-  title: string;
-  status: TaskStatus;
-  dueDate: string;
-  participants: Array<{ email: string; displayName: string }>;
-  subtasks: SubTask[];
+export interface Task extends TaskType {
   progress?: number;
 }
 
@@ -50,6 +46,10 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onPress }) => {
            status.charAt(0).toUpperCase() + status.slice(1);
   };
 
+  const progress = task.subtasks.length > 0 
+    ? Math.round(task.subtasks.reduce((sum, subtask) => sum + (subtask.progress || 0), 0) / task.subtasks.length)
+    : 0;
+
   const completedSubtasks = task.subtasks.filter(subtask => subtask.progress === 100).length;
   const totalSubtasks = task.subtasks.length;
 
@@ -58,70 +58,93 @@ export const TaskCard: React.FC<TaskCardProps> = ({ task, onPress }) => {
       style={[styles.card, { backgroundColor: colors.cardBackground }]}
       onPress={onPress}
     >
-      <Text style={[styles.title, { color: colors.text }]}>{task.title}</Text>
-      
-      <View style={styles.footer}>
-        <View style={[
-          styles.statusContainer,
-          { backgroundColor: `${colors.taskStatus[task.status === 'in progress' ? 'inProgress' : task.status]}15` }
-        ]}>
-          <Ionicons 
-            name={statusIcons[task.status]}
-            size={16}
-            color={colors.taskStatus[task.status === 'in progress' ? 'inProgress' : task.status]}
-          />
-          <Text style={[styles.status, { color: colors.taskStatus[task.status === 'in progress' ? 'inProgress' : task.status] }]}>
-            {getStatusText(task.status)}
+      <View style={styles.mainContent}>
+        <View style={styles.titleSection}>
+          <Text 
+            style={[styles.title, { color: colors.text }]}
+            numberOfLines={2}
+            ellipsizeMode="tail"
+          >
+            {task.title}
           </Text>
-        </View>
-        
-        <View style={styles.dateContainer}>
-          <Ionicons name="calendar-outline" size={16} color={colors.secondaryText} />
-          <Text style={[styles.date, { color: colors.secondaryText }]}>
-            {formatDate(task.dueDate)}
-          </Text>
-        </View>
-      </View>
-
-      <View style={styles.infoContainer}>
-        {task.participants && task.participants.length > 0 && (
-          <View style={styles.assigneeGroup}>
-            <Ionicons name="people-outline" size={16} color={colors.secondaryText} />
-            <Text style={[styles.assigneeText, { color: colors.secondaryText }]}>
-              {task.participants.map(p => p.displayName).join(', ')}
+          <View style={[
+            styles.statusContainer,
+            { backgroundColor: `${colors.taskStatus[task.status === 'in progress' ? 'inProgress' : task.status]}15` }
+          ]}>
+            <Ionicons 
+              name={statusIcons[task.status]}
+              size={14}
+              color={colors.taskStatus[task.status === 'in progress' ? 'inProgress' : task.status]}
+            />
+            <Text style={[styles.status, { color: colors.taskStatus[task.status === 'in progress' ? 'inProgress' : task.status] }]}>
+              {getStatusText(task.status)}
             </Text>
           </View>
-        )}
+        </View>
 
-        {totalSubtasks > 0 && (
-          <View style={styles.subtaskCount}>
-            <Ionicons name="list-outline" size={16} color={colors.secondaryText} />
-            <Text style={[styles.subtaskCountText, { color: colors.secondaryText }]}>
-              {completedSubtasks}/{totalSubtasks}
+        <View style={styles.metricsContainer}>
+          <View style={styles.metricItem}>
+            <CircularProgress
+              progress={progress}
+              size={35}
+              strokeWidth={3}
+              showGlow={true}
+              textStyle={{ fontSize: 9 }}
+            />
+            <View style={styles.metricLabel}>
+              <Ionicons name="list-outline" size={12} color={colors.secondaryText} />
+              <Text style={[styles.metricText, { color: colors.secondaryText }]}>
+                {completedSubtasks}/{totalSubtasks}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.metricItem}>
+            <Ionicons name="people-outline" size={20} color={colors.secondaryText} />
+            <Text style={[styles.metricText, { color: colors.secondaryText }]}>
+              {task.participants?.length || 0}
             </Text>
           </View>
-        )}
+
+          <View style={styles.metricItem}>
+            <Ionicons name="calendar-outline" size={16} color={colors.secondaryText} />
+            <Text style={[styles.metricText, { color: colors.secondaryText }]}>
+              {formatDate(task.dueDate)}
+            </Text>
+          </View>
+        </View>
       </View>
     </TouchableOpacity>
   );
 };
 
+const CARD_WIDTH = Dimensions.get('window').width - 32; // 16px padding on each side
+const CARD_HEIGHT = 120; // Fixed height for all cards
+
 const styles = StyleSheet.create({
   card: {
+    width: CARD_WIDTH,
+    height: CARD_HEIGHT,
     padding: 16,
     borderRadius: 12,
     marginBottom: 12,
   },
+  mainContent: {
+    height: '100%',
+    justifyContent: 'space-between',
+  },
+  titleSection: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    minHeight: 48, // Ensure minimum height for title section
+  },
   title: {
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 12,
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
+    flex: 1,
+    marginRight: 12,
+    lineHeight: 20, // Ensures consistent line height
   },
   statusContainer: {
     flexDirection: 'row',
@@ -129,40 +152,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
+    marginTop: 4, // Align with first line of title
   },
   status: {
     marginLeft: 4,
     fontSize: 12,
     fontWeight: '500',
   },
-  dateContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  date: {
-    marginLeft: 4,
-    fontSize: 12,
-  },
-  infoContainer: {
+  metricsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: 'auto', // Push to bottom
   },
-  assigneeGroup: {
+  metricItem: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 4,
   },
-  assigneeText: {
-    marginLeft: 4,
-    fontSize: 12,
-  },
-  subtaskCount: {
+  metricLabel: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 2,
   },
-  subtaskCountText: {
-    marginLeft: 4,
+  metricText: {
     fontSize: 12,
   },
 });

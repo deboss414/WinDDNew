@@ -2,6 +2,7 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { ConversationsListScreen } from '../screens/chat/ConversationsListScreen';
 import { ChatroomScreen } from '../screens/chat/ChatroomScreen/index';
+import { Message, Participant } from '@/types/chat';
 
 export type ChatStackParamList = {
   ConversationsList: undefined;

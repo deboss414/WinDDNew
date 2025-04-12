@@ -14,6 +14,7 @@ interface CircularProgressProps {
   textStyle?: any;
   showGlow?: boolean;
   animationDuration?: number;
+  text?: string;
 }
 
 export function CircularProgress({
@@ -27,6 +28,7 @@ export function CircularProgress({
   textStyle,
   showGlow = false,
   animationDuration = 300,
+  text,
 }: CircularProgressProps) {
   const colorScheme = useColorScheme() || 'light';
   const colors = getColors(colorScheme);
@@ -118,11 +120,12 @@ export function CircularProgress({
           {
             fontSize: size * 0.2,
             color: textColor || colors.text,
+            marginTop: size * 0.1,
           },
           textStyle,
         ]}
       >
-        {`${Math.round(progress)}%`}
+        {text || Math.round(progress)}
       </Text>
     </View>
   );

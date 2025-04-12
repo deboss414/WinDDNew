@@ -73,6 +73,7 @@ export const FeaturedTasksSection: React.FC<FeaturedTasksSectionProps> = ({ task
         scrollEventThrottle={16}
         snapToInterval={Dimensions.get('window').width - 32}
         decelerationRate="fast"
+        contentContainerStyle={styles.scrollContent}
       >
         {tasks.map((task) => (
           <TouchableOpacity
@@ -107,8 +108,12 @@ const styles = StyleSheet.create({
     fontSize: 14,
     opacity: 0.7,
   },
+  scrollContent: {
+    paddingHorizontal: 0,
+  },
   taskCardWrapper: {
-    width: Dimensions.get('window').width - 32,
+    width: Dimensions.get('window').width - 30,
     paddingHorizontal: 8,
+    marginHorizontal: 6,
   },
 }); 

@@ -65,13 +65,13 @@ export const SubTaskList: React.FC<SubTaskListProps> = ({
         onEditComment={onEditComment}
         onDeleteComment={onDeleteComment}
         onUpdateSubTask={(subtaskId, data) => onProgressChange?.(subtaskId, data.progress)}
-        participants={participants}
+        participants={participants || []}
       />
-      {index < subtasks.length - 1 && (
+      {index < (subtasks?.length || 0) - 1 && (
         <View style={[styles.divider, { backgroundColor: colors.text }]} />
       )}
     </View>
-  ), [onSubTaskPress, onProgressChange, canEditProgress, onAddComment, onEditComment, onDeleteComment, participants, subtasks.length, colors.text]);
+  ), [onSubTaskPress, onProgressChange, canEditProgress, onAddComment, onEditComment, onDeleteComment, participants, subtasks?.length, colors.text]);
 
   const keyExtractor = useCallback((item: SubTask) => item.id, []);
 

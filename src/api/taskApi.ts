@@ -20,7 +20,7 @@ const mockTasks: Task[] = [
         id: '1-1',
         title: 'Research Requirements',
         description: 'Research and document project requirements',
-        assignee: ['john.doe@example.com'],
+        assignee: ['john.doe@example.com', 'jane.smith@example.com'],
         progress: 100,
         dueDate: new Date().toISOString(),
         createdAt: new Date().toISOString(),
@@ -33,6 +33,7 @@ const mockTasks: Task[] = [
             authorId: 'john.doe@example.com',
             authorName: 'John Doe',
             createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
             isEdited: false,
             subtaskId: '1-1'
           }
@@ -50,7 +51,8 @@ const mockTasks: Task[] = [
         createdBy: 'john.doe@example.com',
         comments: []
       }
-    ]
+    ],
+    progress: 80 // (100 + 60) / 2 = 80%
   },
   {
     id: '2',
@@ -93,12 +95,23 @@ interface TasksResponse {
   tasks: Task[];
 }
 
+// Add helper function to calculate progress
+const calculateTaskProgress = (subtasks: SubTask[]): number => {
+  if (!subtasks || subtasks.length === 0) return 0;
+  const totalProgress = subtasks.reduce((sum, subtask) => sum + (subtask.progress || 0), 0);
+  return Math.round(totalProgress / subtasks.length);
+};
+
 export const taskApi = {
   // Get all tasks
   getTasks: async (): Promise<TasksResponse> => {
     try {
       await delay(500); // Simulate network delay
-      return { tasks: mockTasks };
+      const tasksWithProgress = mockTasks.map(task => ({
+        ...task,
+        progress: calculateTaskProgress(task.subtasks)
+      }));
+      return { tasks: tasksWithProgress };
     } catch (error) {
       console.error('Error fetching tasks:', error);
       throw error;

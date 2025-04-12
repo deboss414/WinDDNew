@@ -31,19 +31,32 @@
    - Ensured compliance with `Task` and `SubTask` type definitions
    - Fixed type mismatches in task status handling
 
-4. **Modal Improvements**
-   - Enhanced TaskFormModal
-     - Added proper keyboard handling
-     - Improved scrolling behavior
-     - Implemented platform-specific date picker
-   - Updated SubTaskFormModal
-     - Mirrored TaskFormModal's date picker implementation
-     - Added Cancel/Done buttons for iOS
-     - Improved keyboard and scroll behavior
-   - General Modal Enhancements
+4. **UI Improvements and Enhancements**
+   - Enhanced SubTaskCard Component
+     - Implemented expandable card design
+     - Added avatar display for assignees
+     - Improved comment section visibility
+     - Removed side padding for edge-to-edge design
+     - Added section contrast for better visual hierarchy
+   - Updated TaskSubtasks Component
+     - Improved subtask list rendering
+     - Added dividers between subtasks
+     - Enhanced assignee display with avatars
+     - Optimized performance with proper memoization
+   - Modal Improvements
+     - Enhanced TaskFormModal
+       - Added proper keyboard handling
+       - Improved scrolling behavior
+       - Implemented platform-specific date picker
+     - Updated SubTaskFormModal
+       - Mirrored TaskFormModal's date picker implementation
+       - Added Cancel/Done buttons for iOS
+       - Improved keyboard and scroll behavior
+   - General UI Enhancements
      - Added temporary date state management
      - Improved animation handling
      - Better state management during form submission
+     - Enhanced visual feedback for user interactions
 
 ## Project Documentation
 1. Created comprehensive project summary in `ProjectSummary` file including:
@@ -54,13 +67,14 @@
    - Technical stack details
    - Project structure
    - Important implementation notes
-2. Updated documentation to reflect modal improvements and platform-specific behaviors
+2. Updated documentation to reflect UI improvements and component enhancements
 
 ## Current State
 - Project is set up and running
 - Basic type errors have been resolved
 - Component interfaces have been aligned
-- Modal components have been enhanced with better UX
+- UI components have been enhanced with better UX
+- Modal components have been improved
 - Project documentation is complete and up-to-date
 - Ready for further development and feature implementation
 

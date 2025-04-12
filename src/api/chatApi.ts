@@ -13,7 +13,121 @@ interface ChatResponse {
   task: Task;
 }
 
+interface Conversation {
+  id: string;
+  taskId: string;
+  taskTitle: string;
+  taskStatus: string;
+  participants: Array<{ id: string; name: string; email: string; role: 'member' }>;
+  lastMessage?: {
+    id: string;
+    content: string;
+    senderName: string;
+    createdAt: string;
+  };
+  updatedAt: string;
+  unreadCount: number;
+}
+
+// Mock conversations data
+const mockConversations: Conversation[] = [
+  {
+    id: '1',
+    taskId: '1',
+    taskTitle: 'Project Planning',
+    taskStatus: 'in progress',
+    participants: [
+      { id: '1', name: 'John Doe', email: 'john.doe@example.com', role: 'member' },
+      { id: '2', name: 'Jane Smith', email: 'jane.smith@example.com', role: 'member' }
+    ],
+    lastMessage: {
+      id: '1',
+      content: 'Let\'s discuss the project timeline',
+      senderName: 'John Doe',
+      createdAt: new Date().toISOString()
+    },
+    updatedAt: new Date().toISOString(),
+    unreadCount: 2
+  },
+  {
+    id: '2',
+    taskId: '2',
+    taskTitle: 'Design System',
+    taskStatus: 'completed',
+    participants: [
+      { id: '1', name: 'John Doe', email: 'john.doe@example.com', role: 'member' },
+      { id: '3', name: 'Alice Johnson', email: 'alice@example.com', role: 'member' }
+    ],
+    lastMessage: {
+      id: '2',
+      content: 'The design system is ready for review',
+      senderName: 'Alice Johnson',
+      createdAt: new Date().toISOString()
+    },
+    updatedAt: new Date().toISOString(),
+    unreadCount: 0
+  }
+];
+
+// Mock messages data
+const mockMessages: Record<string, ChatMessage[]> = {
+  '1': [
+    {
+      id: '1',
+      text: 'Let\'s discuss the project timeline',
+      createdAt: new Date().toISOString(),
+      createdBy: 'john.doe@example.com',
+      taskId: '1'
+    },
+    {
+      id: '2',
+      text: 'I\'ve prepared a draft timeline',
+      createdAt: new Date().toISOString(),
+      createdBy: 'jane.smith@example.com',
+      taskId: '1'
+    }
+  ],
+  '2': [
+    {
+      id: '3',
+      text: 'The design system is ready for review',
+      createdAt: new Date().toISOString(),
+      createdBy: 'alice@example.com',
+      taskId: '2'
+    }
+  ]
+};
+
 export const chatApi = {
+  // Get all conversations
+  getConversations: async (): Promise<Conversation[]> => {
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return mockConversations;
+    } catch (error) {
+      console.error('Error fetching conversations:', error);
+      throw error;
+    }
+  },
+
+  // Get a single conversation with its messages
+  getConversation: async (conversationId: string): Promise<{ messages: ChatMessage[]; participants: Array<{ id: string; name: string; email: string; role: 'member' }> }> => {
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const conversation = mockConversations.find(c => c.id === conversationId);
+      const messages = mockMessages[conversationId] || [];
+      return { 
+        messages,
+        participants: conversation?.participants || []
+      };
+    } catch (error) {
+      console.error('Error fetching conversation:', error);
+      throw error;
+    }
+  },
+
   // Get chat messages for a task
   getChatMessages: async (taskId: string): Promise<ChatResponse> => {
     try {

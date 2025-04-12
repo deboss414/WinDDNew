@@ -31,7 +31,7 @@ import { chatApi } from '../../api/chatApi';
 import { TaskHeader } from '../../components/task/TaskHeader';
 import { TaskInfo } from '../../components/task/TaskInfo';
 import { TaskSubtasks } from '../../components/task/TaskSubtasks';
-import { Comment } from './components/Comment';
+import { Comment } from '../../components/comment/Comment';
 import { SubTaskList } from '../../components/task/SubTaskList';
 
 type RootStackParamList = {
@@ -477,21 +477,21 @@ export const TaskDetailScreen: React.FC<Props> = ({ route }) => {
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 140 : 50}
     >
-      <TaskHeader
-        task={task}
-        onBack={() => navigation.goBack()}
-        onMenuPress={() => setShowMenu(true)}
-        progress={calculateTaskProgress(task.subtasks)}
-        onGoToChat={handleGoToChat}
-        onEditTask={handleEditTask}
-        onDeleteTask={handleDeleteTask}
-        onUpdateTask={handleUpdateTask}
-      />
-
       <FlatList
         data={[1]} // Single item to render the content
         renderItem={({ index }) => (
-          <View key={`task-details-${index}`}>
+          <View key={`task-details-${index}`} style={{ paddingTop: Platform.OS === 'ios' ? 0 : 24 }}>
+            <TaskHeader
+              task={task}
+              onBack={() => navigation.goBack()}
+              onMenuPress={() => setShowMenu(true)}
+              progress={calculateTaskProgress(task.subtasks)}
+              onGoToChat={handleGoToChat}
+              onEditTask={handleEditTask}
+              onDeleteTask={handleDeleteTask}
+              onUpdateTask={handleUpdateTask}
+            />
+
             <TaskInfo
               task={task}
               onEditPress={() => setIsEditing(true)}
@@ -572,38 +572,26 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#eee',
   },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
     flex: 1,
     marginRight: 16,
   },
-  headerRight: {
+  statusContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
   },
-  progressContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  progressText: {
-    marginLeft: 4,
+  status: {
     fontSize: 14,
     fontWeight: '500',
   },
-  statusContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-  },
-  statusText: {
-    marginLeft: 4,
+  progress: {
     fontSize: 14,
     fontWeight: '500',
   },
