@@ -3,15 +3,18 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { HomeScreen } from '../screens/HomeScreen';
 import { NotifScreen } from '../screens/notification/NotifScreen';
 import { TaskListScreen } from '../screens/task/TaskListScreen';
-import { TaskDetailScreen } from '../screens/TaskDetailsScreen/TaskDetailScreen';
-import { TaskFormScreen } from '../screens/task/TaskFormScreen';
+import { TaskStack, TaskStackParamList } from './TaskStack';
 
 export type MainStackParamList = {
   Home: undefined;
   Notifications: undefined;
   TaskList: undefined;
-  TaskDetail: { taskId: string };
-  TaskForm: undefined;
+  Tasks: {
+    screen?: keyof TaskStackParamList;
+    params?: {
+      taskId?: string;
+    };
+  };
 };
 
 const Stack = createStackNavigator<MainStackParamList>();
@@ -52,18 +55,10 @@ export const MainStack: React.FC = () => {
         }}
       />
       <Stack.Screen 
-        name="TaskDetail" 
-        component={TaskDetailScreen}
+        name="Tasks" 
+        component={TaskStack}
         options={{
           headerShown: false,
-          header: () => null,
-        }}
-      />
-      <Stack.Screen 
-        name="TaskForm" 
-        component={TaskFormScreen}
-        options={{
-          title: 'New Task',
         }}
       />
     </Stack.Navigator>

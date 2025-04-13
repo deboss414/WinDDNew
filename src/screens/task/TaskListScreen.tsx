@@ -29,6 +29,7 @@ export const TaskListScreen: React.FC = () => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
+      paddingTop: 40,
     },
     centered: {
       justifyContent: 'center',
@@ -37,10 +38,17 @@ export const TaskListScreen: React.FC = () => {
     titleContainer: {
       padding: 16,
       paddingBottom: 8,
+      flexDirection: 'row',
+      alignItems: 'center',
     },
     title: {
       fontSize: 24,
       fontWeight: '600',
+      flex: 1,
+    },
+    backButton: {
+      padding: 8,
+      marginRight: 8,
     },
     listContent: {
       padding: 16,
@@ -124,6 +132,12 @@ export const TaskListScreen: React.FC = () => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.titleContainer}>
+        <TouchableOpacity 
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
+        </TouchableOpacity>
         <Text style={[styles.title, { color: colors.text }]}>Tasks</Text>
       </View>
       <FlatList
@@ -133,7 +147,10 @@ export const TaskListScreen: React.FC = () => {
           <View style={styles.cardContainer}>
             <TaskCard
               task={item}
-              onPress={() => navigation.navigate('TaskDetail', { taskId: item.id })}
+              onPress={() => navigation.navigate('Tasks', {
+                screen: 'TaskDetail',
+                params: { taskId: item.id }
+              })}
             />
           </View>
         )}
@@ -143,7 +160,9 @@ export const TaskListScreen: React.FC = () => {
       
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => navigation.navigate('TaskForm')}
+        onPress={() => navigation.navigate('Tasks', {
+          screen: 'TaskForm'
+        })}
       >
         <Ionicons name="add" size={24} color="#FFFFFF" />
       </TouchableOpacity>

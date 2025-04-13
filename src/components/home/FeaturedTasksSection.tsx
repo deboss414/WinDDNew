@@ -4,26 +4,23 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { TaskCard } from '../task/TaskCard';
 import { Task } from '../../types/task';
 import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { MainTabParamList } from '../../navigation/MainTabs';
-import { TaskStackParamList } from '../../navigation/MainTabs';
 import { getColors } from '../../constants/colors';
 import { useColorScheme } from 'react-native';
 
-type TabNavigationProp = BottomTabNavigationProp<MainTabParamList>;
+type NavigationProp = BottomTabNavigationProp<MainTabParamList>;
 
 interface FeaturedTasksSectionProps {
   tasks: Task[];
-  onTaskPress: (task: Task) => void;
 }
 
-export const FeaturedTasksSection: React.FC<FeaturedTasksSectionProps> = ({ tasks, onTaskPress }) => {
+export const FeaturedTasksSection: React.FC<FeaturedTasksSectionProps> = ({ tasks }) => {
+  const navigation = useNavigation<NavigationProp>();
   const colorScheme = useColorScheme() || 'light';
   const colors = getColors(colorScheme);
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollViewRef = useRef<ScrollView>(null);
-  const navigation = useNavigation<TabNavigationProp>();
 
   const handleScroll = (event: any) => {
     const contentOffset = event.nativeEvent.contentOffset;
@@ -33,15 +30,10 @@ export const FeaturedTasksSection: React.FC<FeaturedTasksSectionProps> = ({ task
   };
 
   const handleTaskPress = (taskId: string) => {
-    // First switch to the Tasks tab
-    navigation.navigate('Tasks');
-    // Then navigate to TaskDetail using the nested navigator
-    setTimeout(() => {
-      navigation.navigate('Tasks', {
-        screen: 'TaskDetail',
-        params: { taskId }
-      });
-    }, 100);
+    navigation.navigate('Tasks', {
+      screen: 'TaskDetail',
+      params: { taskId }
+    });
   };
 
   const formatDate = (date: string) => {

@@ -13,6 +13,7 @@ import { NotifScreen } from '../screens/notification/NotifScreen';
 import { ChatNavigator } from './ChatNavigator';
 import { getColors } from '../constants/colors';
 import { CalendarNavigator } from './CalendarNavigator';
+import { TaskStack as TaskStackComponent, TaskStackParamList as TaskStackType } from './TaskStack';
 
 // Types for the Task stack navigator
 export type TaskStackParamList = {
@@ -62,16 +63,16 @@ const TaskStackNavigator = () => {
 // Types for the bottom tab navigator
 export type MainTabParamList = {
   Home: undefined;
-  Tasks: {
-    screen?: keyof TaskStackParamList;
-    params?: {
-      taskId?: string;
-    };
-  } | undefined;
   Calendar: undefined;
   Chat: undefined;
   Profile: undefined;
   NotifScreen: undefined;
+  Tasks: {
+    screen?: keyof TaskStackType;
+    params?: {
+      taskId?: string;
+    };
+  };
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
@@ -90,8 +91,6 @@ export const MainTabs = () => {
 
           if (route.name === 'Home') {
             iconName = focused ? 'home' : 'house';
-          } else if (route.name === 'Tasks') {
-            iconName = focused ? 'check-circle' : 'check-circle-outline';
           } else if (route.name === 'Calendar') {
             iconName = focused ? 'calendar-today' : 'calendar-today';
           } else if (route.name === 'Chat') {
@@ -116,7 +115,6 @@ export const MainTabs = () => {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Tasks" component={TaskStackNavigator} />
       <Tab.Screen name="Calendar" component={CalendarNavigator} />
       <Tab.Screen name="Chat" component={ChatNavigator} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
@@ -124,6 +122,14 @@ export const MainTabs = () => {
         name="NotifScreen" 
         component={NotifScreen}
         options={{ tabBarLabel: 'Notifications' }}
+      />
+      <Tab.Screen 
+        name="Tasks" 
+        component={TaskStackComponent}
+        options={{
+          tabBarButton: () => null,
+          tabBarStyle: { display: 'none' },
+        }}
       />
     </Tab.Navigator>
   );

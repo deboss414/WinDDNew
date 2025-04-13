@@ -8,15 +8,12 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
-import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { StackNavigationProp } from '@react-navigation/stack';
 import { getColors } from '../../constants/colors';
 import { Task } from '../../types/task';
+import { MainStackParamList } from '../../navigation/MainStack';
 
-type RootStackParamList = {
-  TaskList: { filter?: string };
-};
-
-type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type NavigationProp = StackNavigationProp<MainStackParamList>;
 
 interface TaskSummarySectionProps {
   tasks: Task[];
@@ -41,7 +38,7 @@ export const TaskSummarySection: React.FC<TaskSummarySectionProps> = ({
   const renderStatCard = (title: string, count: number, icon: string, color: string) => (
     <TouchableOpacity
       style={[styles.statCard, { backgroundColor: colors.cardBackground }]}
-      onPress={() => navigation.navigate('TaskList', { filter: title.toLowerCase() })}
+      onPress={() => navigation.navigate('Tasks', { screen: 'TaskList' })}
     >
       <View style={[styles.iconContainer, { backgroundColor: color }]}>
         <Ionicons name={icon as any} size={24} color="#FFFFFF" />
@@ -57,7 +54,7 @@ export const TaskSummarySection: React.FC<TaskSummarySectionProps> = ({
     <View style={styles.container}>
       <View style={styles.sectionHeader}>
         <Text style={[styles.sectionTitle, { color: colors.text }]}>Task Summary</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('TaskList', {})}>
+        <TouchableOpacity onPress={() => navigation.navigate('Tasks', { screen: 'TaskList' })}>
           <Text style={[styles.viewAllText, { color: colors.primary }]}>View All</Text>
         </TouchableOpacity>
       </View>
@@ -125,11 +122,6 @@ const styles = StyleSheet.create({
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   iconContainer: {
     width: 48,
