@@ -134,7 +134,7 @@ export const TaskListScreen: React.FC = () => {
       <View style={styles.titleContainer}>
         <TouchableOpacity 
           style={styles.backButton}
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.navigate('Home')}
         >
           <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>

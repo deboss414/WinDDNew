@@ -7,6 +7,9 @@ const mockUser: User = {
   id: '1',
   email: 'test@example.com',
   displayName: 'Test User',
+  first_name: 'Test',
+  last_name: 'User',
+  role: 'user',
   createdAt: new Date().toISOString(),
   lastUpdated: new Date().toISOString(),
 };

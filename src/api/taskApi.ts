@@ -1,7 +1,7 @@
 import { Task, SubTask } from '../types/task';
 
-// Mock data
-const mockTasks: Task[] = [
+// Mock data - make it a let so we can modify it
+let mockTasks: Task[] = [
   {
     id: '1',
     title: 'Project Planning and Design commmunication Plan',

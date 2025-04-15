@@ -8,12 +8,12 @@ import { HomeScreen } from '../screens/HomeScreen';
 import { TaskListScreen } from '../screens/task/TaskListScreen';
 import { TaskDetailScreen } from '../screens/TaskDetailsScreen/TaskDetailScreen';
 import { TaskFormScreen } from '../screens/task/TaskFormScreen';
-import { ProfileScreen } from '../screens/ProfileScreen';
 import { NotifScreen } from '../screens/notification/NotifScreen';
 import { ChatNavigator } from './ChatNavigator';
 import { getColors } from '../constants/colors';
 import { CalendarNavigator } from './CalendarNavigator';
 import { TaskStack as TaskStackComponent, TaskStackParamList as TaskStackType } from './TaskStack';
+import { SettingsStack } from './SettingsStack';
 
 // Types for the Task stack navigator
 export type TaskStackParamList = {
@@ -65,8 +65,8 @@ export type MainTabParamList = {
   Home: undefined;
   Calendar: undefined;
   Chat: undefined;
-  Profile: undefined;
   NotifScreen: undefined;
+  Settings: undefined;
   Tasks: {
     screen?: keyof TaskStackType;
     params?: {
@@ -95,10 +95,10 @@ export const MainTabs = () => {
             iconName = focused ? 'calendar-today' : 'calendar-today';
           } else if (route.name === 'Chat') {
             iconName = focused ? 'chat' : 'chat-bubble-outline';
-          } else if (route.name === 'Profile') {
-            iconName = focused ? 'person' : 'person-outline';
           } else if (route.name === 'NotifScreen') {
             iconName = focused ? 'notifications' : 'notifications-none';
+          } else if (route.name === 'Settings') {
+            iconName = focused ? 'settings' : 'settings-applications';
           } else {
             iconName = 'home';
           }
@@ -117,11 +117,15 @@ export const MainTabs = () => {
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Calendar" component={CalendarNavigator} />
       <Tab.Screen name="Chat" component={ChatNavigator} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
       <Tab.Screen 
         name="NotifScreen" 
         component={NotifScreen}
         options={{ tabBarLabel: 'Notifications' }}
+      />
+      <Tab.Screen 
+        name="Settings" 
+        component={SettingsStack}
+        options={{ tabBarLabel: 'Settings' }}
       />
       <Tab.Screen 
         name="Tasks" 

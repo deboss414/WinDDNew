@@ -13,12 +13,13 @@ import {
   Platform,
 } from 'react-native';
 import { Calendar, DateData } from 'react-native-calendars';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { getColors } from '../../constants/colors';
 import type { Task } from '../../components/task/TaskCard';
-import { fetchTasks } from '../../api/taskApi';
+import { taskApi } from '../../api/taskApi';
+import { UpcomingTasksSummary } from '../../components/calendar/UpcomingTasksSummary';
 
 const SCREEN_HEIGHT = Dimensions.get('window').height;
 const PANEL_HEIGHT = SCREEN_HEIGHT * 0.7;
@@ -76,14 +77,22 @@ export const CalendarScreen: React.FC = () => {
     loadTasks();
   }, []);
 
+  useFocusEffect(
+    React.useCallback(() => {
+      loadTasks();
+    }, [])
+  );
+
   const loadTasks = async () => {
     try {
       setLoading(true);
-      const fetchedTasks = await fetchTasks();
-      setTasks(fetchedTasks);
-      updateMarkedDates(fetchedTasks);
+      const response = await taskApi.getTasks();
+      console.log('Fetched tasks:', response.tasks);
+      setTasks(response.tasks);
+      updateMarkedDates(response.tasks);
     } catch (error) {
       console.error('Error loading tasks:', error);
+      Alert.alert('Error', 'Failed to load tasks. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -96,11 +105,26 @@ export const CalendarScreen: React.FC = () => {
         console.warn('Invalid date:', date);
         return new Date().toISOString().split('T')[0];
       }
-      return d.toISOString().split('T')[0];
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     } catch (error) {
       console.error('Error formatting date:', error);
       return new Date().toISOString().split('T')[0];
     }
+  };
+
+  const formatDisplayDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const options: Intl.DateTimeFormatOptions = {
+      weekday: 'long',
+      month: 'long',
+      day: 'numeric',
+      year: 'numeric',
+      timeZone: 'UTC'
+    };
+    return date.toLocaleDateString('en-US', options);
   };
 
   const updateMarkedDates = (tasks: Task[]) => {
@@ -108,6 +132,7 @@ export const CalendarScreen: React.FC = () => {
     tasks.forEach(task => {
       try {
         const date = formatDate(task.dueDate);
+        console.log('Marking date:', date, 'for task:', task.title);
         marked[date] = {
           marked: true,
           dotColor: getStatusColor(task.status, colors)
@@ -116,6 +141,7 @@ export const CalendarScreen: React.FC = () => {
         console.error('Error marking date for task:', task.id, error);
       }
     });
+    console.log('Updated marked dates:', marked);
     setMarkedDates(marked);
   };
 
@@ -133,13 +159,18 @@ export const CalendarScreen: React.FC = () => {
 
   const handleDayPress = (day: DateData) => {
     setSelectedDate(day.dateString);
-    Animated.spring(slideAnim, {
-      toValue: 1,
-      useNativeDriver: true,
-      tension: 65,
-      friction: 11,
-    }).start();
   };
+
+  useEffect(() => {
+    if (selectedDate) {
+      Animated.spring(slideAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 65,
+        friction: 11,
+      }).start();
+    }
+  }, [selectedDate]);
 
   const handleClosePanel = () => {
     Animated.spring(slideAnim, {
@@ -246,6 +277,13 @@ export const CalendarScreen: React.FC = () => {
     return date < today;
   };
 
+  const handleTaskPress = (task: Task) => {
+    navigation.navigate('Tasks', {
+      screen: 'TaskDetail',
+      params: { taskId: task.id }
+    });
+  };
+
   const renderTask = ({ item }: { item: Task }) => (
     <TouchableOpacity
       style={[
@@ -257,10 +295,7 @@ export const CalendarScreen: React.FC = () => {
           opacity: isDateInPast(item.dueDate) ? 0.8 : 1,
         }
       ]}
-      onPress={() => navigation.navigate('Tasks', {
-        screen: 'TaskDetail',
-        params: { taskId: item.id }
-      })}
+      onPress={() => handleTaskPress(item)}
     >
       <View style={styles.taskContent}>
         <MaterialIcons 
@@ -334,21 +369,28 @@ export const CalendarScreen: React.FC = () => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <Calendar
-        key={colorScheme}
-        onDayPress={handleDayPress}
-        markedDates={{
-          ...markedDates,
-          [selectedDate]: {
-            ...(markedDates[selectedDate] || {}),
-            selected: true,
-            selectedColor: colors.primary,
-          },
-        }}
-        theme={calendarTheme}
-        minDate="2024-01-01"
-        maxDate={new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]}
-        markingType="dot"
+      <View style={styles.calendarContainer}>
+        <Calendar
+          key={colorScheme}
+          onDayPress={handleDayPress}
+          markedDates={{
+            ...markedDates,
+            [selectedDate]: {
+              ...(markedDates[selectedDate] || {}),
+              selected: true,
+              selectedColor: colors.primary,
+            },
+          }}
+          theme={calendarTheme}
+          minDate="2024-01-01"
+          maxDate={new Date(new Date().setFullYear(new Date().getFullYear() + 1)).toISOString().split('T')[0]}
+          markingType="dot"
+        />
+      </View>
+
+      <UpcomingTasksSummary
+        tasks={tasks}
+        onTaskPress={handleTaskPress}
       />
 
       <TouchableWithoutFeedback onPress={handleClosePanel}>
@@ -375,11 +417,7 @@ export const CalendarScreen: React.FC = () => {
         <View style={styles.panelHeader}>
           <View>
             <Text style={[styles.dateTitle, { color: colors.text }]}>
-              {new Date(selectedDate).toLocaleDateString('en-US', { 
-                weekday: 'long', 
-                month: 'long', 
-                day: 'numeric' 
-              })}
+              {formatDisplayDate(selectedDate)}
             </Text>
             {isDateInPast(selectedDate) && (
               <Text style={[styles.pastDateText, { color: colors.secondaryText }]}>
@@ -462,6 +500,10 @@ export const CalendarScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  calendarContainer: {
+    height: '50%',
+    padding: 16,
   },
   slideUpPanel: {
     position: 'absolute',

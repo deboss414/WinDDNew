@@ -13,9 +13,10 @@ type NavigationProp = BottomTabNavigationProp<MainTabParamList>;
 
 interface FeaturedTasksSectionProps {
   tasks: Task[];
+  onTaskPress: (task: Task) => void;
 }
 
-export const FeaturedTasksSection: React.FC<FeaturedTasksSectionProps> = ({ tasks }) => {
+export const FeaturedTasksSection: React.FC<FeaturedTasksSectionProps> = ({ tasks, onTaskPress }) => {
   const navigation = useNavigation<NavigationProp>();
   const colorScheme = useColorScheme() || 'light';
   const colors = getColors(colorScheme);
@@ -29,11 +30,8 @@ export const FeaturedTasksSection: React.FC<FeaturedTasksSectionProps> = ({ task
     setActiveIndex(pageNum);
   };
 
-  const handleTaskPress = (taskId: string) => {
-    navigation.navigate('Tasks', {
-      screen: 'TaskDetail',
-      params: { taskId }
-    });
+  const handleTaskPress = (task: Task) => {
+    onTaskPress(task);
   };
 
   const formatDate = (date: string) => {
@@ -71,9 +69,9 @@ export const FeaturedTasksSection: React.FC<FeaturedTasksSectionProps> = ({ task
           <TouchableOpacity
             key={task.id}
             style={styles.taskCardWrapper}
-            onPress={() => handleTaskPress(task.id)}
+            onPress={() => handleTaskPress(task)}
           >
-            <TaskCard task={task} onPress={() => handleTaskPress(task.id)} />
+            <TaskCard task={task} onPress={() => handleTaskPress(task)} />
           </TouchableOpacity>
         ))}
       </ScrollView>
