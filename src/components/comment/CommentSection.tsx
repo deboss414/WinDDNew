@@ -47,6 +47,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const [newCommentText, setNewCommentText] = useState('');
   const [replyToId, setReplyToId] = useState<string | undefined>();
   const [editingCommentId, setEditingCommentId] = useState<string | undefined>();
+  const [editingText, setEditingText] = useState('');
 
   const safeComments = Array.isArray(comments) ? comments : [];
   const topLevelComments = safeComments.filter(comment => !comment.parentCommentId);
@@ -63,6 +64,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
   const handleEditComment = (commentId: string, text: string) => {
     onEditComment(commentId, text);
     setEditingCommentId(undefined);
+    setEditingText('');
   };
 
   const renderComment = (comment: Comment, depth: number = 0) => {
@@ -77,7 +79,7 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
         )}
         <View style={[
           styles.commentContent,
-          isReply && { backgroundColor: '#fff' }
+          isReply && { backgroundColor: colors.cardBackground }
         ]}>
           <View style={[styles.avatarContainer, { backgroundColor: getAvatarColor(comment.authorName) }]}>
             <Text style={styles.avatarText}>{getInitials(comment.authorName)}</Text>
@@ -104,22 +106,25 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                       borderColor: colors.divider,
                     },
                   ]}
-                  value={newCommentText}
-                  onChangeText={setNewCommentText}
+                  value={editingText}
+                  onChangeText={setEditingText}
                   multiline
                   autoFocus
                 />
                 <View style={styles.editActions}>
                   <TouchableOpacity
                     onPress={() => {
-                      handleEditComment(comment.id, newCommentText);
+                      handleEditComment(comment.id, editingText);
                     }}
                     style={[styles.editButton, { backgroundColor: colors.primary }]}
                   >
                     <Text style={styles.editButtonText}>Save</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    onPress={() => setEditingCommentId(undefined)}
+                    onPress={() => {
+                      setEditingCommentId(undefined);
+                      setEditingText('');
+                    }}
                     style={[styles.editButton, { backgroundColor: colors.taskStatus.expired }]}
                   >
                     <Text style={styles.editButtonText}>Cancel</Text>
@@ -132,20 +137,17 @@ export const CommentSection: React.FC<CommentSectionProps> = ({
                   {comment.text}
                 </Text>
                 <View style={styles.commentActions}>
-                  {!isReply && (
-                    <TouchableOpacity
-                      onPress={() => setReplyToId(comment.id)}
-                      style={styles.actionButton}
-                    >
-                      <MaterialIcons name="reply" size={16} color={colors.primary} />
-                      <Text style={[styles.actionText, { color: colors.primary }]}>Reply</Text>
-                    </TouchableOpacity>
-                  )}
-                  {/* Show edit/delete only for the author */}
+                  <TouchableOpacity
+                    onPress={() => setReplyToId(comment.id)}
+                    style={styles.actionButton}
+                  >
+                    <MaterialIcons name="reply" size={16} color={colors.primary} />
+                    <Text style={[styles.actionText, { color: colors.primary }]}>Reply</Text>
+                  </TouchableOpacity>
                   <TouchableOpacity
                     onPress={() => {
                       setEditingCommentId(comment.id);
-                      setNewCommentText(comment.text);
+                      setEditingText(comment.text);
                     }}
                     style={styles.actionButton}
                   >
@@ -258,70 +260,73 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 8,
+    alignItems: 'flex-start',
+    marginBottom: 8,
   },
   input: {
     flex: 1,
     minHeight: 40,
     maxHeight: 120,
+    padding: 8,
+    borderRadius: 8,
     borderWidth: 1,
-    borderRadius: 20,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    paddingRight: 40,
-    fontSize: 14,
+    marginRight: 8,
   },
   submitButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
   },
   cancelReply: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginTop: 8,
+    marginBottom: 8,
   },
   cancelReplyText: {
+    marginLeft: 4,
     fontSize: 12,
   },
   commentsList: {
-    marginTop: 16,
+    marginTop: 8,
   },
   commentContainer: {
-    marginBottom: 16,
+    marginBottom: 12,
     position: 'relative',
-    paddingLeft: 20,
+  },
+  threadLine: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 2,
   },
   commentContent: {
     flexDirection: 'row',
-    gap: 12,
     padding: 12,
     borderRadius: 8,
-    backgroundColor: '#f8f8f8',
   },
   avatarContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 12,
   },
   avatarText: {
     color: '#fff',
-    fontSize: 14,
     fontWeight: '600',
+    fontSize: 12,
   },
   commentMain: {
     flex: 1,
   },
   commentHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
     marginBottom: 4,
   },
   authorName: {
@@ -334,12 +339,11 @@ const styles = StyleSheet.create({
   commentText: {
     fontSize: 14,
     lineHeight: 20,
+    marginBottom: 8,
   },
   commentActions: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: 16,
-    marginTop: 8,
   },
   actionButton: {
     flexDirection: 'row',
@@ -348,22 +352,16 @@ const styles = StyleSheet.create({
   },
   actionText: {
     fontSize: 12,
-    fontWeight: '500',
-  },
-  responses: {
-    marginTop: 12,
-    paddingLeft: 20,
   },
   editContainer: {
-    gap: 8,
+    marginBottom: 8,
   },
   editInput: {
-    minHeight: 40,
+    minHeight: 80,
+    padding: 8,
+    borderRadius: 8,
     borderWidth: 1,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 14,
+    marginBottom: 8,
   },
   editActions: {
     flexDirection: 'row',
@@ -372,19 +370,14 @@ const styles = StyleSheet.create({
   editButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 16,
+    borderRadius: 4,
   },
   editButtonText: {
     color: '#fff',
     fontSize: 12,
-    fontWeight: '500',
+    fontWeight: '600',
   },
-  threadLine: {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    bottom: 0,
-    width: 2,
-    backgroundColor: '#E0E0E0',
+  responses: {
+    marginTop: 8,
   },
 }); 

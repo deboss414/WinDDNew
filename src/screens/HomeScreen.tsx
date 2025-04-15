@@ -57,7 +57,10 @@ export const HomeScreen: React.FC = () => {
   };
 
   const handleTaskPress = (task: Task) => {
-    navigation.navigate('TaskDetail', { taskId: task.id });
+    navigation.navigate('Tasks', {
+      screen: 'TaskDetail',
+      params: { taskId: task.id }
+    });
   };
 
   const filteredTasks = tasks.filter(task => {

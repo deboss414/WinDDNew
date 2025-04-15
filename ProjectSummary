@@ -41,10 +41,13 @@ WinDD is a React Native mobile application built with Expo, designed to manage t
        - Displays task counts by status
        - Shows progress charts and metrics
        - Implements filtering and sorting options
+       - Features "View All" button with proper navigation
+       - Includes stat cards with navigation to filtered views
      - `TaskList`: Displays a list of tasks with filtering capabilities
        - Implements infinite scrolling
        - Supports multiple view modes (list, grid)
        - Handles task selection and actions
+       - Features back button navigation to Home
      - `TaskDetail`: Detailed view of a single task
        - Shows complete task information
        - Manages subtasks and comments
@@ -69,6 +72,7 @@ WinDD is a React Native mobile application built with Expo, designed to manage t
      - Supports advanced filtering and sorting
      - Implements search functionality
      - Shows task status indicators
+     - Features back navigation to Home
    - `TaskDetailScreen`: Detailed view of a single task
      - Shows task information and history
      - Manages subtasks and comments
@@ -86,17 +90,21 @@ WinDD is a React Native mobile application built with Expo, designed to manage t
    - Navigation Structure:
      ```
      AppNavigator
-     ├── BottomTabNavigator
-     │   ├── HomeStack
-     │   │   ├── HomeScreen
-     │   │   └── TaskDetailScreen
-     │   ├── TasksStack
-     │   │   ├── TaskListScreen
-     │   │   ├── TaskDetailScreen
-     │   │   └── TaskFormScreen
-     │   └── ProfileStack
-     └── AuthStack
+     ├── MainStack
+     │   ├── HomeScreen
+     │   ├── Notifications
+     │   ├── TaskList
+     │   └── Tasks (TaskStack)
+     │       ├── TaskList
+     │       ├── TaskDetail
+     │       └── TaskForm
+     └── BottomTabNavigator
      ```
+   - Navigation Features:
+     - Proper back navigation from TaskList to Home
+     - Nested navigation for task-related screens
+     - Consistent navigation patterns across components
+     - Type-safe navigation with TypeScript
 
 4. **State Management**
    - Uses React Context for global state management

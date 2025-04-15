@@ -4,7 +4,7 @@ import { Task, SubTask } from '../types/task';
 const mockTasks: Task[] = [
   {
     id: '1',
-    title: 'Project Planning',
+    title: 'Project Planning and Design commmunication Plan',
     description: 'Create a detailed project plan including timeline, resources, and milestones. This is a test description. And often times it is longer than the title. Most people will not read it. Those who do not have the same mentatlity would not understand',
     status: 'in progress',
     dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now

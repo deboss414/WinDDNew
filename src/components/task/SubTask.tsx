@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
 import { MaterialIcons } from '@expo/vector-icons';
 import { getColors } from '../../constants/colors';
 import { Comment as CommentType } from '../../types/comment';
-import { Comment } from '../comment/Comment';
+import { CommentSection } from '../comment/CommentSection';
 import { CircularProgress } from '../common/CircularProgress';
 import { SubTaskFormModal } from './SubTaskFormModal';
 
@@ -57,19 +57,41 @@ const Avatar: React.FC<{ name: string; size?: number }> = ({ name, size = 28 }) 
 };
 
 const AssigneeList: React.FC<{ assignees: string[]; participants: string[] }> = ({ assignees, participants }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
   const colorScheme = useColorScheme() || 'light';
   const colors = getColors(colorScheme);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [animation] = useState(new Animated.Value(0));
 
   const toggleExpand = () => {
+    const toValue = isExpanded ? 0 : 1;
+    Animated.spring(animation, {
+      toValue,
+      useNativeDriver: false,
+      tension: 50,
+      friction: 7,
+    }).start();
     setIsExpanded(!isExpanded);
   };
 
+  const expandedStyle = {
+    opacity: animation,
+    transform: [{
+      translateY: animation.interpolate({
+        inputRange: [0, 1],
+        outputRange: [-10, 0],
+      }),
+    }],
+    maxHeight: animation.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 1000],
+    }),
+  };
+
   return (
-    <View style={styles.assigneeContainer}>
+    <View>
       <TouchableOpacity 
         onPress={toggleExpand}
-        style={styles.avatarGroup}
+        style={styles.assigneeContainer}
         activeOpacity={0.7}
       >
         {assignees.slice(0, isExpanded ? undefined : 3).map((email, index) => {
@@ -77,7 +99,7 @@ const AssigneeList: React.FC<{ assignees: string[]; participants: string[] }> = 
           if (!participant) return null;
           return (
             <View key={email} style={[styles.avatarWrapper, { zIndex: assignees.length - index }]}>
-              <Avatar name={participant} />
+              <Avatar name={participant} size={24} />
             </View>
           );
         })}
@@ -90,33 +112,25 @@ const AssigneeList: React.FC<{ assignees: string[]; participants: string[] }> = 
         )}
       </TouchableOpacity>
 
-      {isExpanded && (
-        <Animated.View style={[styles.expandedList, { opacity: 1 }]}>
-          <View style={styles.expandedHeader}>
-            <Text style={[styles.expandedTitle, { color: colors.text }]}>Assignees</Text>
-            <TouchableOpacity onPress={toggleExpand} style={styles.collapseButton}>
-              <MaterialIcons name="close" size={20} color={colors.secondaryText} />
-            </TouchableOpacity>
-          </View>
-          {assignees.map((email) => {
-            const participant = participants.find(p => p === email);
-            if (!participant) return null;
-            return (
-              <View key={email} style={styles.expandedItem}>
-                <Avatar name={participant} size={24} />
-                <View style={styles.expandedInfo}>
-                  <Text style={[styles.expandedName, { color: colors.text }]}>
-                    {participant}
-                  </Text>
-                  <Text style={[styles.expandedEmail, { color: colors.secondaryText }]}>
-                    {email}
-                  </Text>
-                </View>
+      <Animated.View style={[styles.expandedList, expandedStyle]}>
+        {isExpanded && assignees.map((email) => {
+          const participant = participants.find(p => p === email);
+          if (!participant) return null;
+          return (
+            <View key={email} style={[styles.expandedItem, { backgroundColor: colors.primary + '15' }]}>
+              <Avatar name={participant} size={24} />
+              <View style={styles.expandedInfo}>
+                <Text style={[styles.expandedName, { color: colors.text }]} numberOfLines={1}>
+                  {participant}
+                </Text>
+                <Text style={[styles.expandedEmail, { color: colors.secondaryText }]} numberOfLines={1}>
+                  {email}
+                </Text>
               </View>
-            );
-          })}
-        </Animated.View>
-      )}
+            </View>
+          );
+        })}
+      </Animated.View>
     </View>
   );
 };
@@ -136,6 +150,8 @@ export const SubTaskCard: React.FC<SubTaskProps> = ({
   const [isEditModalVisible, setIsEditModalVisible] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [animation] = useState(new Animated.Value(0));
+  const [contentHeight, setContentHeight] = useState(0);
+  const contentRef = useRef<View>(null);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -155,16 +171,16 @@ export const SubTaskCard: React.FC<SubTaskProps> = ({
     return colors.taskStatus.expired;
   };
 
-  const handleEditComment = (commentId: string, text: string) => {
+  const handleAddCommentWrapper = (text: string, parentCommentId?: string) => {
+    onAddComment(subtask.id, text, parentCommentId);
+  };
+
+  const handleEditCommentWrapper = (commentId: string, text: string) => {
     onEditComment(subtask.id, commentId, text);
   };
 
-  const handleDeleteComment = (commentId: string) => {
+  const handleDeleteCommentWrapper = (commentId: string) => {
     onDeleteComment(subtask.id, commentId);
-  };
-
-  const handleAddComment = (text: string, parentCommentId?: string) => {
-    onAddComment(subtask.id, text, parentCommentId);
   };
 
   const handleUpdateSubTask = (data: Omit<SubTask, 'id' | 'createdAt' | 'lastUpdated' | 'createdBy' | 'comments'>) => {
@@ -174,10 +190,11 @@ export const SubTaskCard: React.FC<SubTaskProps> = ({
 
   const toggleExpand = () => {
     const toValue = isExpanded ? 0 : 1;
-    Animated.timing(animation, {
+    Animated.spring(animation, {
       toValue,
-      duration: 300,
-      useNativeDriver: true,
+      useNativeDriver: false,
+      tension: 50,
+      friction: 7,
     }).start();
     setIsExpanded(!isExpanded);
   };
@@ -191,6 +208,10 @@ export const SubTaskCard: React.FC<SubTaskProps> = ({
         outputRange: [-10, 0],
       }),
     }],
+    maxHeight: animation.interpolate({
+      inputRange: [0, 1],
+      outputRange: [0, 1000],
+    }),
   };
 
   return (
@@ -258,33 +279,25 @@ export const SubTaskCard: React.FC<SubTaskProps> = ({
         </View>
       </TouchableOpacity>
 
-      {isExpanded && (
-        <Animated.View style={[styles.expandedContent, expandedStyle]}>
-          <View style={styles.expandedSection}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Assignees</Text>
-            <AssigneeList assignees={subtask.assignee} participants={participants} />
-          </View>
-          
-          <View style={styles.expandedSection}>
-            <Text style={[styles.sectionTitle, { color: colors.text }]}>Comments</Text>
-            {comments.length === 0 ? (
-              <Text style={[styles.emptyText, { color: colors.secondaryText }]}>
-                No comments yet
-              </Text>
-            ) : (
-              comments.map((comment) => (
-                <Comment
-                  key={comment.id}
-                  comment={comment}
-                  onEdit={(commentId, text) => handleEditComment(commentId, text)}
-                  onDelete={(commentId) => handleDeleteComment(commentId)}
-                  onReply={(text, parentCommentId) => handleAddComment(text, parentCommentId)}
-                />
-              ))
-            )}
-          </View>
-        </Animated.View>
-      )}
+      <Animated.View 
+        ref={contentRef}
+        style={[styles.expandedContent, expandedStyle]}
+      >
+        <View style={styles.expandedSection}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Assignees</Text>
+          <AssigneeList assignees={subtask.assignee} participants={participants} />
+        </View>
+        
+        <View style={styles.expandedSection}>
+          <CommentSection
+            subtaskId={subtask.id}
+            comments={subtask.comments || []}
+            onAddComment={handleAddCommentWrapper}
+            onEditComment={handleEditCommentWrapper}
+            onDeleteComment={handleDeleteCommentWrapper}
+          />
+        </View>
+      </Animated.View>
 
       <SubTaskFormModal
         visible={isEditModalVisible}
@@ -374,42 +387,65 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   avatarWrapper: {
-    marginLeft: -10,
+    marginLeft: -8,
+    borderWidth: 2,
+    borderColor: '#fff',
+    borderRadius: 999,
   },
   avatarGroup: {
     flexDirection: 'row',
     alignItems: 'center',
   },
   assigneeContainer: {
-    flex: 1,
-    marginVertical: 8,
-  },
-  expandedHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
-    paddingBottom: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,0,0,0.1)',
+    marginTop: 8,
+    flexWrap: 'wrap',
+    gap: 8,
   },
-  expandedTitle: {
-    fontSize: 16,
-    fontWeight: '600',
+  assigneeItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.05)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginRight: 8,
   },
-  collapseButton: {
-    padding: 4,
+  assigneeName: {
+    marginLeft: 4,
+    fontSize: 12,
   },
   expandedList: {
-    marginTop: 12,
+    marginTop: 8,
+    overflow: 'hidden',
+  },
+  expandedContent: {
+    padding: 16,
+    overflow: 'hidden',
+  },
+  expandedSection: {
+    marginBottom: 16,
     padding: 12,
     backgroundColor: 'rgba(0,0,0,0.02)',
     borderRadius: 8,
   },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  emptyText: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    padding: 12,
+  },
   expandedItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 6,
+    padding: 8,
+    borderRadius: 8,
+    marginBottom: 4,
   },
   expandedInfo: {
     marginLeft: 12,
@@ -422,22 +458,5 @@ const styles = StyleSheet.create({
   expandedEmail: {
     fontSize: 12,
     marginTop: 2,
-  },
-  expandedContent: {
-    padding: 16,
-    backgroundColor: 'rgba(0,0,0,0.03)',
-  },
-  expandedSection: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 12,
-  },
-  emptyText: {
-    fontSize: 14,
-    fontStyle: 'italic',
-    padding: 12,
   },
 });
