@@ -41,4 +41,7 @@ ios/build/
 android/app/build/
 android/build/
 android/.gradle/
-android/local.properties 
+android/local.properties
+
+# TypeScript
+*.tsbuildinfo
